@@ -407,6 +407,35 @@ th {
     margin-right: 10px;
 }
 
+.import-loading {
+    text-align: center;
+    padding: 30px 20px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.import-loading p {
+    margin-top: 15px;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.spinner {
+    border: 4px solid #ecf0f1;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .export-form label {
     display: inline-block;
     margin-right: 20px;

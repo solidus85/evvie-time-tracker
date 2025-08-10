@@ -198,6 +198,18 @@ App.prototype.validateCSV = async function() {
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
     
+    // Show loading indicator and disable buttons
+    const loadingDiv = document.getElementById('import-loading');
+    const importBtn = document.getElementById('import-csv');
+    const validateBtn = document.getElementById('validate-csv');
+    const resultsDiv = document.getElementById('import-results');
+    
+    loadingDiv.style.display = 'block';
+    loadingDiv.querySelector('p').textContent = 'Validating CSV, please wait...';
+    importBtn.disabled = true;
+    validateBtn.disabled = true;
+    resultsDiv.innerHTML = ''; // Clear previous results
+    
     try {
         const response = await fetch('/api/import/validate', {
             method: 'POST',
@@ -205,7 +217,6 @@ App.prototype.validateCSV = async function() {
         });
         const result = await response.json();
         
-        const resultsDiv = document.getElementById('import-results');
         resultsDiv.innerHTML = `
             <h3>Validation Results</h3>
             <p><strong>Valid:</strong> ${result.valid ? 'Yes' : 'No'}</p>
@@ -221,6 +232,12 @@ App.prototype.validateCSV = async function() {
         `;
     } catch (error) {
         this.showToast('Validation failed', 'error');
+    } finally {
+        // Hide loading indicator and re-enable buttons
+        loadingDiv.style.display = 'none';
+        loadingDiv.querySelector('p').textContent = 'Import in progress, please wait...'; // Reset text
+        importBtn.disabled = false;
+        validateBtn.disabled = false;
     }
 };
 
@@ -234,6 +251,17 @@ App.prototype.importCSV = async function() {
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
     
+    // Show loading indicator and disable buttons
+    const loadingDiv = document.getElementById('import-loading');
+    const importBtn = document.getElementById('import-csv');
+    const validateBtn = document.getElementById('validate-csv');
+    const resultsDiv = document.getElementById('import-results');
+    
+    loadingDiv.style.display = 'block';
+    importBtn.disabled = true;
+    validateBtn.disabled = true;
+    resultsDiv.innerHTML = ''; // Clear previous results
+    
     try {
         const response = await fetch('/api/import/csv', {
             method: 'POST',
@@ -241,7 +269,6 @@ App.prototype.importCSV = async function() {
         });
         const result = await response.json();
         
-        const resultsDiv = document.getElementById('import-results');
         resultsDiv.innerHTML = `
             <h3>Import Results</h3>
             <p><strong>Imported:</strong> ${result.imported}</p>
@@ -260,6 +287,11 @@ App.prototype.importCSV = async function() {
         this.loadInitialData();
     } catch (error) {
         this.showToast('Import failed', 'error');
+    } finally {
+        // Hide loading indicator and re-enable buttons
+        loadingDiv.style.display = 'none';
+        importBtn.disabled = false;
+        validateBtn.disabled = false;
     }
 };
 
