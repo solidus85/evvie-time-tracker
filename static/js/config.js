@@ -58,55 +58,6 @@ App.prototype.showHourLimitForm = async function() {
     });
 };
 
-App.prototype.showExclusionForm = function() {
-    const content = `
-        <h2>Add Exclusion Period</h2>
-        <form id="exclusion-form">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" name="name" required>
-            </div>
-            <div class="form-group">
-                <label>Start Date</label>
-                <input type="date" name="start_date" required>
-            </div>
-            <div class="form-group">
-                <label>End Date</label>
-                <input type="date" name="end_date" required>
-            </div>
-            <div class="form-group">
-                <label>Reason (optional)</label>
-                <textarea name="reason"></textarea>
-            </div>
-            <button type="submit" class="btn-primary">Save</button>
-        </form>
-    `;
-    this.showModal(content);
-    
-    document.getElementById('exclusion-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = {
-            name: formData.get('name'),
-            start_date: formData.get('start_date'),
-            end_date: formData.get('end_date'),
-            reason: formData.get('reason') || null
-        };
-        
-        try {
-            await this.api('/api/payroll/exclusions', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            this.showToast('Exclusion period created successfully');
-            this.closeModal();
-            this.loadConfig();
-        } catch (error) {
-            this.showToast(error.message, 'error');
-        }
-    });
-};
-
 App.prototype.configurePeriods = async function() {
     const anchorDate = document.getElementById('anchor-date').value;
     if (!anchorDate) {
@@ -241,18 +192,6 @@ App.prototype.deleteHourLimit = async function(id) {
     try {
         await this.api(`/api/config/hour-limits/${id}`, { method: 'DELETE' });
         this.showToast('Hour limit removed');
-        this.loadConfig();
-    } catch (error) {
-        this.showToast(error.message, 'error');
-    }
-};
-
-App.prototype.deleteExclusion = async function(id) {
-    if (!confirm('Are you sure you want to remove this exclusion period?')) return;
-    
-    try {
-        await this.api(`/api/payroll/exclusions/${id}`, { method: 'DELETE' });
-        this.showToast('Exclusion period removed');
         this.loadConfig();
     } catch (error) {
         this.showToast(error.message, 'error');

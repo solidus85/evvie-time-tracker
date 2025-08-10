@@ -18,6 +18,7 @@ class App {
     setupEventListeners() {
         // Navigation buttons
         document.getElementById('btn-dashboard').addEventListener('click', () => this.showView('dashboard'));
+        document.getElementById('btn-exclusions').addEventListener('click', () => this.showView('exclusions'));
         document.getElementById('btn-employees').addEventListener('click', () => this.showView('employees'));
         document.getElementById('btn-children').addEventListener('click', () => this.showView('children'));
         document.getElementById('btn-import').addEventListener('click', () => this.showView('import'));
@@ -104,16 +105,14 @@ class App {
         this.currentView = viewName;
         
         if (viewName === 'dashboard') this.loadDashboard();
+        else if (viewName === 'exclusions') this.loadExclusions();
         else if (viewName === 'employees') this.loadEmployees();
         else if (viewName === 'children') this.loadChildren();
         else if (viewName === 'config') this.loadConfig();
     }
 
     async loadConfig() {
-        const [hourLimits, exclusions] = await Promise.all([
-            this.api('/api/config/hour-limits'),
-            this.api('/api/payroll/exclusions')
-        ]);
+        const hourLimits = await this.api('/api/config/hour-limits');
         
         document.querySelector('#hour-limits-table tbody').innerHTML = hourLimits.map(limit => `
             <tr>
@@ -125,16 +124,6 @@ class App {
                     <button onclick="app.editHourLimit(${limit.id})" class="btn-primary">Edit</button>
                     <button onclick="app.deleteHourLimit(${limit.id})" class="btn-secondary">Delete</button>
                 </td>
-            </tr>
-        `).join('');
-        
-        document.querySelector('#exclusions-table tbody').innerHTML = exclusions.map(exc => `
-            <tr>
-                <td>${exc.name}</td>
-                <td>${exc.start_date}</td>
-                <td>${exc.end_date}</td>
-                <td>${exc.reason || 'N/A'}</td>
-                <td><button onclick="app.deleteExclusion(${exc.id})">Delete</button></td>
             </tr>
         `).join('');
     }

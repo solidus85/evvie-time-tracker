@@ -12,6 +12,7 @@
             <h1>Evvie Time Tracker</h1>
             <nav>
                 <button id="btn-dashboard" class="nav-btn active">Dashboard</button>
+                <button id="btn-exclusions" class="nav-btn">Exclusions</button>
                 <button id="btn-employees" class="nav-btn">Employees</button>
                 <button id="btn-children" class="nav-btn">Children</button>
                 <button id="btn-import" class="nav-btn">Import CSV</button>
@@ -35,6 +36,24 @@
                 </div>
                 <div id="period-summary" class="summary">
                 </div>
+            </div>
+
+            <div id="exclusions-view" class="view">
+                <h2>Exclusion Periods</h2>
+                <p>Define periods when manual shift entry should be blocked (e.g., when data is imported from external system)</p>
+                <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
+                <table id="exclusions-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
             <div id="employees-view" class="view">
@@ -128,22 +147,6 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div class="config-section">
-                    <h3>Exclusion Periods</h3>
-                    <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
-                    <table id="exclusions-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Reason</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
             </div>
         </main>
     </div>
@@ -159,6 +162,7 @@
 
     <script src="/static/js/app.js"></script>
     <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/exclusions.js"></script>
     <script src="/static/js/employees.js"></script>
     <script src="/static/js/children.js"></script>
     <script src="/static/js/shifts.js"></script>
