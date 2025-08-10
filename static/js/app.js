@@ -195,6 +195,15 @@ class App {
         const date = new Date(dateStr + 'T00:00:00');
         return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
+    
+    formatDateWithYear(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
 
     formatTime(timeStr) {
         const [hours, minutes] = timeStr.split(':');

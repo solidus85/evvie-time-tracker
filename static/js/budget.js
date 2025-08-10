@@ -41,8 +41,8 @@ App.prototype.loadBudgetReports = async function() {
         }
         
         tbody.innerHTML = reports.map(report => {
-            const periodStart = this.formatDate(report.period_start);
-            const periodEnd = this.formatDate(report.period_end);
+            const periodStart = this.formatDateWithYear(report.period_start);
+            const periodEnd = this.formatDateWithYear(report.period_end);
             
             return `
                 <tr>
@@ -131,7 +131,7 @@ App.prototype.viewReportDetails = async function(reportId) {
             
             <div class="report-detail-card">
                 <h4>Budget Summary</h4>
-                <p><strong>Period:</strong> ${this.formatDate(data.budget_summary.budget_period_start)} - ${this.formatDate(data.budget_summary.budget_period_end)}</p>
+                <p><strong>Period:</strong> ${this.formatDateWithYear(data.budget_summary.budget_period_start)} - ${this.formatDateWithYear(data.budget_summary.budget_period_end)}</p>
                 <p><strong>Total Budget:</strong> ${this.formatCurrency(data.budget_summary.total_budgeted)}</p>
                 <p><strong>Total Spent:</strong> ${this.formatCurrency(data.budget_summary.total_spent)}</p>
                 <p><strong>Remaining:</strong> ${this.formatCurrency(data.budget_summary.remaining_balance)}</p>
