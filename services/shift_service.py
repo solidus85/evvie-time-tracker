@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from services.payroll_service import PayrollService
 from services.config_service import ConfigService
 
@@ -116,8 +116,25 @@ class ShiftService:
         if not period:
             return None
         
+        # Determine which week this shift falls into
+        period_start = datetime.strptime(period['start_date'], "%Y-%m-%d")
+        shift_date = datetime.strptime(date, "%Y-%m-%d")
+        days_from_start = (shift_date - period_start).days
+        week_number = 1 if days_from_start < 7 else 2
+        
+        # Calculate week boundaries
+        if week_number == 1:
+            week_start = period['start_date']
+            week_end_date = period_start + datetime.timedelta(days=6)
+            week_end = week_end_date.strftime("%Y-%m-%d")
+        else:
+            week_start_date = period_start + datetime.timedelta(days=7)
+            week_start = week_start_date.strftime("%Y-%m-%d")
+            week_end = period['end_date']
+        
+        # Calculate existing hours for this week
         existing_hours = self.calculate_period_hours(
-            employee_id, child_id, period['start_date'], period['end_date'], exclude_shift_id
+            employee_id, child_id, week_start, week_end, exclude_shift_id
         )
         
         start_dt = datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M:%S")
@@ -126,10 +143,10 @@ class ShiftService:
         
         total_hours = existing_hours + new_hours
         
-        if total_hours > limit['max_hours_per_period']:
-            return f"Total hours ({total_hours:.1f}) exceeds limit ({limit['max_hours_per_period']:.1f}) for this employee/child pair"
+        if total_hours > limit['max_hours_per_week']:
+            return f"Week {week_number} hours ({total_hours:.1f}) exceeds weekly limit ({limit['max_hours_per_week']:.1f}) for this employee/child pair"
         elif limit['alert_threshold'] and total_hours > limit['alert_threshold']:
-            return f"Total hours ({total_hours:.1f}) exceeds alert threshold ({limit['alert_threshold']:.1f}) for this employee/child pair"
+            return f"Week {week_number} hours ({total_hours:.1f}) exceeds alert threshold ({limit['alert_threshold']:.1f}) for this employee/child pair"
         
         return None
     

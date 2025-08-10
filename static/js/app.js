@@ -400,7 +400,7 @@ class App {
             <tr>
                 <td>${limit.employee_name}</td>
                 <td>${limit.child_name}</td>
-                <td>${limit.max_hours_per_period}</td>
+                <td>${limit.max_hours_per_week}</td>
                 <td>${limit.alert_threshold || 'N/A'}</td>
                 <td><button onclick="app.deleteHourLimit(${limit.id})">Delete</button></td>
             </tr>

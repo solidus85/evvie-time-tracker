@@ -22,8 +22,8 @@ App.prototype.showHourLimitForm = async function() {
                 </select>
             </div>
             <div class="form-group">
-                <label>Max Hours per Period</label>
-                <input type="number" name="max_hours_per_period" step="0.5" required>
+                <label>Max Hours per Week</label>
+                <input type="number" name="max_hours_per_week" step="0.5" required>
             </div>
             <div class="form-group">
                 <label>Alert Threshold (optional)</label>
@@ -40,7 +40,7 @@ App.prototype.showHourLimitForm = async function() {
         const data = {
             employee_id: parseInt(formData.get('employee_id')),
             child_id: parseInt(formData.get('child_id')),
-            max_hours_per_period: parseFloat(formData.get('max_hours_per_period')),
+            max_hours_per_week: parseFloat(formData.get('max_hours_per_week')),
             alert_threshold: formData.get('alert_threshold') ? parseFloat(formData.get('alert_threshold')) : null
         };
         

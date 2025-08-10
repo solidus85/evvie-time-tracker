@@ -21,18 +21,18 @@ class ConfigService:
             (employee_id, child_id)
         )
     
-    def create_hour_limit(self, employee_id, child_id, max_hours_per_period, alert_threshold=None):
+    def create_hour_limit(self, employee_id, child_id, max_hours_per_week, alert_threshold=None):
         existing = self.get_hour_limit(employee_id, child_id)
         if existing:
             raise ValueError("Hour limit already exists for this employee/child pair")
         
-        if alert_threshold and alert_threshold >= max_hours_per_period:
+        if alert_threshold and alert_threshold >= max_hours_per_week:
             raise ValueError("Alert threshold must be less than max hours")
         
         return self.db.insert(
-            """INSERT INTO hour_limits (employee_id, child_id, max_hours_per_period, alert_threshold)
+            """INSERT INTO hour_limits (employee_id, child_id, max_hours_per_week, alert_threshold)
                VALUES (?, ?, ?, ?)""",
-            (employee_id, child_id, max_hours_per_period, alert_threshold)
+            (employee_id, child_id, max_hours_per_week, alert_threshold)
         )
     
     def update_hour_limit(self, limit_id, data):
@@ -47,15 +47,15 @@ class ConfigService:
         updates = []
         params = []
         
-        if 'max_hours_per_period' in data:
-            updates.append("max_hours_per_period = ?")
-            params.append(data['max_hours_per_period'])
+        if 'max_hours_per_week' in data:
+            updates.append("max_hours_per_week = ?")
+            params.append(data['max_hours_per_week'])
         
         if 'alert_threshold' in data:
-            if data['alert_threshold'] and 'max_hours_per_period' in data:
-                if data['alert_threshold'] >= data['max_hours_per_period']:
+            if data['alert_threshold'] and 'max_hours_per_week' in data:
+                if data['alert_threshold'] >= data['max_hours_per_week']:
                     raise ValueError("Alert threshold must be less than max hours")
-            elif data['alert_threshold'] and data['alert_threshold'] >= limit['max_hours_per_period']:
+            elif data['alert_threshold'] and data['alert_threshold'] >= limit['max_hours_per_week']:
                 raise ValueError("Alert threshold must be less than max hours")
             
             updates.append("alert_threshold = ?")

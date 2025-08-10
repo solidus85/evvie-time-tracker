@@ -18,7 +18,11 @@ def get_hour_limits():
 def create_hour_limit():
     try:
         data = request.json
-        required = ['employee_id', 'child_id', 'max_hours_per_period']
+        # Support both old and new field names for compatibility
+        if 'max_hours_per_period' in data and 'max_hours_per_week' not in data:
+            data['max_hours_per_week'] = data['max_hours_per_period'] / 2.0  # Convert period to week
+        
+        required = ['employee_id', 'child_id', 'max_hours_per_week']
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
         
@@ -26,7 +30,7 @@ def create_hour_limit():
         limit_id = service.create_hour_limit(
             employee_id=data['employee_id'],
             child_id=data['child_id'],
-            max_hours_per_period=data['max_hours_per_period'],
+            max_hours_per_week=data['max_hours_per_week'],
             alert_threshold=data.get('alert_threshold')
         )
         return jsonify({'id': limit_id, 'message': 'Hour limit created'}), 201

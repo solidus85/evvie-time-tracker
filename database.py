@@ -87,7 +87,7 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     employee_id INTEGER NOT NULL,
                     child_id INTEGER NOT NULL,
-                    max_hours_per_period REAL NOT NULL,
+                    max_hours_per_week REAL NOT NULL,
                     alert_threshold REAL,
                     active BOOLEAN DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -102,6 +102,39 @@ class Database:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             ''')
+            
+            # Migration: rename max_hours_per_period to max_hours_per_week if needed
+            cursor.execute("PRAGMA table_info(hour_limits)")
+            columns = cursor.fetchall()
+            column_names = [col[1] for col in columns]
+            
+            if 'max_hours_per_period' in column_names and 'max_hours_per_week' not in column_names:
+                # Create new table with updated schema
+                cursor.execute('''
+                    CREATE TABLE hour_limits_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER NOT NULL,
+                        child_id INTEGER NOT NULL,
+                        max_hours_per_week REAL NOT NULL,
+                        alert_threshold REAL,
+                        active BOOLEAN DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (employee_id) REFERENCES employees(id),
+                        FOREIGN KEY (child_id) REFERENCES children(id),
+                        UNIQUE(employee_id, child_id)
+                    );
+                ''')
+                
+                # Copy data, dividing period limits by 2 to get weekly limits
+                cursor.execute('''
+                    INSERT INTO hour_limits_new (id, employee_id, child_id, max_hours_per_week, alert_threshold, active, created_at)
+                    SELECT id, employee_id, child_id, max_hours_per_period/2.0, alert_threshold/2.0, active, created_at
+                    FROM hour_limits;
+                ''')
+                
+                # Drop old table and rename new one
+                cursor.execute('DROP TABLE hour_limits')
+                cursor.execute('ALTER TABLE hour_limits_new RENAME TO hour_limits')
     
     def execute(self, query, params=None):
         with self.get_connection() as conn:
