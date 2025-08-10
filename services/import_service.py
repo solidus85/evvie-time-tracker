@@ -146,18 +146,17 @@ class ImportService:
                         child_id=child_id,
                         date=parsed['date'],
                         start_time=parsed['start_time'],
-                        end_time=parsed['end_time']
+                        end_time=parsed['end_time'],
+                        allow_overlaps=True  # Allow overlaps for imports from source of truth
                     )
                     
                     if shift_warnings:
                         warnings.extend([f"Row {i}: {w}" for w in shift_warnings])
                     
                 except ValueError as e:
-                    if "overlapping shift" in str(e).lower():
-                        warnings.append(f"Row {i}: {str(e)} - Skipping import of this shift")
-                        continue
-                    else:
-                        raise
+                    # Only skip if there's a critical error (like invalid time)
+                    errors.append(f"Row {i}: {str(e)}")
+                    continue
                 
                 self.shift_service.create(
                     employee_id=employee_id,

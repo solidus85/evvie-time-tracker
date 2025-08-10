@@ -47,7 +47,7 @@ class ShiftService:
             (shift_id,)
         )
     
-    def validate_shift(self, employee_id, child_id, date, start_time, end_time, exclude_shift_id=None):
+    def validate_shift(self, employee_id, child_id, date, start_time, end_time, exclude_shift_id=None, allow_overlaps=False):
         warnings = []
         
         if start_time >= end_time:
@@ -59,9 +59,17 @@ class ShiftService:
         
         overlaps = self.check_overlaps(employee_id, child_id, date, start_time, end_time, exclude_shift_id)
         if overlaps['employee']:
-            raise ValueError(f"Employee has overlapping shift from {overlaps['employee']['start_time']} to {overlaps['employee']['end_time']}")
+            msg = f"Employee has overlapping shift from {overlaps['employee']['start_time']} to {overlaps['employee']['end_time']}"
+            if allow_overlaps:
+                warnings.append(msg)
+            else:
+                raise ValueError(msg)
         if overlaps['child']:
-            raise ValueError(f"Child has overlapping shift from {overlaps['child']['start_time']} to {overlaps['child']['end_time']}")
+            msg = f"Child has overlapping shift from {overlaps['child']['start_time']} to {overlaps['child']['end_time']}"
+            if allow_overlaps:
+                warnings.append(msg)
+            else:
+                raise ValueError(msg)
         
         hour_warning = self.check_hour_limits(employee_id, child_id, date, start_time, end_time, exclude_shift_id)
         if hour_warning:
