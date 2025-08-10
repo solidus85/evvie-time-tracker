@@ -1,5 +1,49 @@
 /* Forecast management styles */
 
+/* Tab buttons styling */
+.forecast-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: #ecf0f1;
+    border: none;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.tab-btn:hover {
+    background: #bdc3c7;
+}
+
+.tab-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Forecast controls */
 .forecast-controls, .pattern-controls, .projection-controls, .recommendation-controls {
     display: flex;

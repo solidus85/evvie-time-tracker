@@ -205,11 +205,19 @@ class PDFBudgetParser:
             parts = client_name.split(',')
             if len(parts) == 2:
                 last_name = parts[0].strip()
-                # Look for child with matching last name
+                first_name = parts[1].strip()
+                # Look for child with matching first and last name
+                # Try exact match first
                 child = self.db.fetchone(
-                    "SELECT id FROM children WHERE name LIKE ? OR code = ?",
-                    (f"%{last_name}%", client_name)
+                    "SELECT id FROM children WHERE name = ? OR name = ?",
+                    (f"{first_name} {last_name}", f"{last_name} {first_name}")
                 )
+                if not child:
+                    # If no exact match, try matching by last name only
+                    child = self.db.fetchone(
+                        "SELECT id FROM children WHERE name LIKE ?",
+                        (f"%{last_name}%",)
+                    )
                 if child:
                     child_id = child['id']
         

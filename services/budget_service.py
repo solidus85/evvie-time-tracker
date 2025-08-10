@@ -29,11 +29,62 @@ class BudgetService:
     
     def get_budget_for_period(self, child_id, period_start, period_end):
         """Get budget for a specific child and period"""
-        return self.db.fetchone(
+        # First check child_budgets table
+        budget = self.db.fetchone(
             """SELECT * FROM child_budgets 
                WHERE child_id = ? AND period_start = ? AND period_end = ?""",
             (child_id, period_start, period_end)
         )
+        
+        if budget:
+            return budget
+        
+        # If no manual budget found, check budget_reports for overlapping period
+        # Find the most recent report that covers this period
+        report = self.db.fetchone(
+            """SELECT * FROM budget_reports 
+               WHERE child_id = ? 
+               AND period_start <= ? 
+               AND period_end >= ?
+               ORDER BY created_at DESC
+               LIMIT 1""",
+            (child_id, period_end, period_start)
+        )
+        
+        if report:
+            # Convert budget report to budget format
+            # Calculate hours from dollars using average rate from report data
+            import json
+            try:
+                report_data = json.loads(report['report_data'])
+                
+                # Calculate average hourly rate from employee spending
+                total_hours = 0
+                total_amount = 0
+                
+                if 'employee_spending_summary' in report_data:
+                    for emp_name, emp_data in report_data['employee_spending_summary'].items():
+                        total_hours += emp_data.get('total_hours', 0)
+                        total_amount += emp_data.get('total_amount', 0)
+                
+                # Use average rate to convert budget to hours
+                avg_rate = (total_amount / total_hours) if total_hours > 0 else 25.0  # Default $25/hr
+                
+                budget_hours = report['total_budgeted'] / avg_rate if report['total_budgeted'] else 0
+                
+                return {
+                    'id': None,  # Indicate this is from report, not manual budget
+                    'child_id': child_id,
+                    'period_start': report['period_start'],
+                    'period_end': report['period_end'],
+                    'budget_amount': report['total_budgeted'],
+                    'budget_hours': round(budget_hours, 2),
+                    'notes': f"From PDF report dated {report['report_date']}"
+                }
+            except (json.JSONDecodeError, KeyError):
+                pass
+        
+        return None
     
     def create_child_budget(self, child_id, period_start, period_end, 
                            budget_amount=None, budget_hours=None, notes=None):
