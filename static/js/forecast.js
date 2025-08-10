@@ -82,6 +82,19 @@ App.prototype.loadRecommendationPeriods = async function() {
     }
 };
 
+App.prototype.formatHoursWithCommas = function(hours) {
+    // Truncate (round down) and add commas
+    if (hours === null || hours === undefined) return '0';
+    const truncated = Math.floor(hours);
+    return truncated.toLocaleString('en-US');
+};
+
+App.prototype.formatDailyAverage = function(hours) {
+    // Keep one decimal place for daily averages
+    if (hours === null || hours === undefined) return '0.0';
+    return hours.toFixed(1);
+};
+
 App.prototype.loadAvailableHours = async function() {
     const startDate = document.getElementById('forecast-start').value;
     const endDate = document.getElementById('forecast-end').value;
@@ -125,16 +138,16 @@ App.prototype.loadAvailableHours = async function() {
                             <div class="hours-metrics">
                                 <div class="metric-row">
                                     <span class="label">Budget:</span>
-                                    <span class="value">${child.budget_hours || 0} hrs</span>
+                                    <span class="value">${this.formatHoursWithCommas(child.budget_hours)} hrs</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="label">Used:</span>
-                                    <span class="value">${child.used_hours ? child.used_hours.toFixed(2) : '0'} hrs</span>
+                                    <span class="value">${this.formatHoursWithCommas(child.used_hours)} hrs</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="label">Available:</span>
                                     <span class="value ${child.available_hours < 0 ? 'negative' : ''}">
-                                        ${child.available_hours ? child.available_hours.toFixed(2) : '0'} hrs
+                                        ${this.formatHoursWithCommas(child.available_hours)} hrs
                                     </span>
                                 </div>
                                 <div class="metric-row">
@@ -143,7 +156,7 @@ App.prototype.loadAvailableHours = async function() {
                                 </div>
                                 <div class="metric-row">
                                     <span class="label">Daily Average:</span>
-                                    <span class="value">${child.average_daily_available} hrs/day</span>
+                                    <span class="value">${this.formatDailyAverage(child.average_daily_available)} hrs/day</span>
                                 </div>
                             </div>
                             <div class="utilization-bar">
