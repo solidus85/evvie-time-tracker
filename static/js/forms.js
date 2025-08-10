@@ -190,13 +190,13 @@ App.prototype.showChildForm = function(child = null) {
 
 App.prototype.validateCSV = async function() {
     const fileInput = document.getElementById('csv-file');
-    if (!fileInput.files[0]) {
-        this.showToast('Please select a file', 'error');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        this.showToast('Please select at least one file', 'error');
         return;
     }
     
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+    const files = fileInput.files;
+    const isSingleFile = files.length === 1;
     
     // Show loading indicator and disable buttons
     const loadingDiv = document.getElementById('import-loading');
@@ -205,35 +205,85 @@ App.prototype.validateCSV = async function() {
     const resultsDiv = document.getElementById('import-results');
     
     loadingDiv.style.display = 'block';
-    loadingDiv.querySelector('p').textContent = 'Validating CSV, please wait...';
     importBtn.disabled = true;
     validateBtn.disabled = true;
     resultsDiv.innerHTML = ''; // Clear previous results
     
     try {
-        const response = await fetch('/api/import/validate', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        
-        resultsDiv.innerHTML = `
-            <h3>Validation Results</h3>
-            <p><strong>Valid:</strong> ${result.valid ? 'Yes' : 'No'}</p>
-            <p><strong>Rows:</strong> ${result.rows}</p>
-            ${result.errors.length > 0 ? `
-                <h4>Errors:</h4>
+        if (isSingleFile) {
+            // Single file validation (backward compatible)
+            const formData = new FormData();
+            formData.append('file', files[0]);
+            
+            loadingDiv.querySelector('p').textContent = 'Validating CSV, please wait...';
+            
+            const response = await fetch('/api/import/validate', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            resultsDiv.innerHTML = `
+                <h3>Validation Results</h3>
+                <p><strong>File:</strong> ${files[0].name}</p>
+                <p><strong>Valid:</strong> ${result.valid ? 'Yes' : 'No'}</p>
+                <p><strong>Rows:</strong> ${result.rows}</p>
+                ${result.errors.length > 0 ? `
+                    <h4>Errors:</h4>
+                    <div class="import-messages">
+                        ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    </div>
+                ` : ''}
+                ${result.warnings.length > 0 ? `
+                    <h4>Warnings:</h4>
+                    <div class="import-messages">
+                        ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+        } else {
+            // Multiple file validation
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+                loadingDiv.querySelector('p').textContent = `Validating file ${i + 1} of ${files.length}: ${files[i].name}`;
+            }
+            
+            const response = await fetch('/api/import/batch-validate', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            resultsDiv.innerHTML = `
+                <h3>Batch Validation Results</h3>
+                <p><strong>Files:</strong> ${files.length}</p>
+                <p><strong>Overall Valid:</strong> ${result.valid ? 'Yes' : 'No'}</p>
+                <p><strong>Total Rows:</strong> ${result.total_rows}</p>
+                
+                <h4>File Summary:</h4>
                 <div class="import-messages">
-                    ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    ${result.file_results.map(f => `
+                        <div class="import-message ${f.valid ? 'warning' : 'error'}">
+                            <strong>${f.filename}</strong>: ${f.valid ? 'Valid' : 'Invalid'} (${f.rows} rows)
+                        </div>
+                    `).join('')}
                 </div>
-            ` : ''}
-            ${result.warnings.length > 0 ? `
-                <h4>Warnings:</h4>
-                <div class="import-messages">
-                    ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
-                </div>
-            ` : ''}
-        `;
+                
+                ${result.errors.length > 0 ? `
+                    <h4>Errors:</h4>
+                    <div class="import-messages">
+                        ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    </div>
+                ` : ''}
+                ${result.warnings.length > 0 ? `
+                    <h4>Warnings:</h4>
+                    <div class="import-messages">
+                        ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
     } catch (error) {
         this.showToast('Validation failed', 'error');
     } finally {
@@ -247,13 +297,13 @@ App.prototype.validateCSV = async function() {
 
 App.prototype.importCSV = async function() {
     const fileInput = document.getElementById('csv-file');
-    if (!fileInput.files[0]) {
-        this.showToast('Please select a file', 'error');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        this.showToast('Please select at least one file', 'error');
         return;
     }
     
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+    const files = fileInput.files;
+    const isSingleFile = files.length === 1;
     
     // Show loading indicator and disable buttons
     const loadingDiv = document.getElementById('import-loading');
@@ -267,31 +317,87 @@ App.prototype.importCSV = async function() {
     resultsDiv.innerHTML = ''; // Clear previous results
     
     try {
-        const response = await fetch('/api/import/csv', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        
-        resultsDiv.innerHTML = `
-            <h3>Import Results</h3>
-            <p><strong>Imported:</strong> ${result.imported}</p>
-            <p><strong>Duplicates:</strong> ${result.duplicates}</p>
-            ${result.errors.length > 0 ? `
-                <h4>Errors:</h4>
+        if (isSingleFile) {
+            // Single file import (backward compatible)
+            const formData = new FormData();
+            formData.append('file', files[0]);
+            
+            loadingDiv.querySelector('p').textContent = 'Import in progress, please wait...';
+            
+            const response = await fetch('/api/import/csv', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            resultsDiv.innerHTML = `
+                <h3>Import Results</h3>
+                <p><strong>File:</strong> ${files[0].name}</p>
+                <p><strong>Imported:</strong> ${result.imported}</p>
+                <p><strong>Duplicates:</strong> ${result.duplicates}</p>
+                ${result.errors.length > 0 ? `
+                    <h4>Errors:</h4>
+                    <div class="import-messages">
+                        ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    </div>
+                ` : ''}
+                ${result.warnings.length > 0 ? `
+                    <h4>Warnings:</h4>
+                    <div class="import-messages">
+                        ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+            
+            this.showToast(`Imported ${result.imported} shifts successfully`);
+        } else {
+            // Multiple file import
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+            
+            // Process files sequentially with progress updates
+            loadingDiv.querySelector('p').textContent = `Processing ${files.length} files...`;
+            
+            const response = await fetch('/api/import/batch-csv', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            resultsDiv.innerHTML = `
+                <h3>Batch Import Results</h3>
+                <p><strong>Files Processed:</strong> ${files.length}</p>
+                <p><strong>Total Imported:</strong> ${result.total_imported}</p>
+                <p><strong>Total Duplicates:</strong> ${result.total_duplicates}</p>
+                
+                <h4>File Summary:</h4>
                 <div class="import-messages">
-                    ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    ${result.file_results.map(f => `
+                        <div class="import-message warning">
+                            <strong>${f.filename}</strong>: Imported ${f.imported}, Duplicates ${f.duplicates}
+                        </div>
+                    `).join('')}
                 </div>
-            ` : ''}
-            ${result.warnings.length > 0 ? `
-                <h4>Warnings:</h4>
-                <div class="import-messages">
-                    ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
-                </div>
-            ` : ''}
-        `;
+                
+                ${result.errors.length > 0 ? `
+                    <h4>Errors:</h4>
+                    <div class="import-messages">
+                        ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                    </div>
+                ` : ''}
+                ${result.warnings.length > 0 ? `
+                    <h4>Warnings:</h4>
+                    <div class="import-messages">
+                        ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+            
+            this.showToast(`Imported ${result.total_imported} shifts from ${files.length} files`);
+        }
         
-        this.showToast(`Imported ${result.imported} shifts successfully`);
         this.loadInitialData();
     } catch (error) {
         this.showToast('Import failed', 'error');
