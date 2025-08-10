@@ -291,7 +291,7 @@ App.prototype.generateProjection = async function() {
                     </div>
                     <div class="projection-metric">
                         <span class="label">Projected Hours:</span>
-                        <span class="value large">${projection.projected_hours} hrs</span>
+                        <span class="value">${projection.projected_hours} hrs</span>
                     </div>
                     <div class="projection-metric">
                         <span class="label">Weekly Average:</span>

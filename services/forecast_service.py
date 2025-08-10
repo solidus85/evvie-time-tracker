@@ -194,12 +194,37 @@ class ForecastService:
                 current_period['end_date']
             )
             if available['budget_hours'] > 0:
-                budget_comparison = {
-                    'current_budget': available['budget_hours'],
-                    'projected_need': projected_total,
-                    'variance': available['budget_hours'] - projected_total,
-                    'sufficient': available['budget_hours'] >= projected_total
-                }
+                # Get budget period to calculate prorated budget
+                budget = self.budget_service.get_budget_for_period(
+                    child_id, 
+                    current_period['start_date'],
+                    current_period['end_date']
+                )
+                
+                if budget:
+                    # Calculate total days in budget period
+                    budget_start = datetime.strptime(budget['period_start'], '%Y-%m-%d').date()
+                    budget_end = datetime.strptime(budget['period_end'], '%Y-%m-%d').date()
+                    total_budget_days = (budget_end - budget_start).days + 1
+                    
+                    # Prorate budget for the projection period
+                    daily_budget = available['budget_hours'] / total_budget_days
+                    prorated_budget = daily_budget * projection_days
+                    
+                    budget_comparison = {
+                        'current_budget': round(prorated_budget, 2),
+                        'projected_need': projected_total,
+                        'variance': round(prorated_budget - projected_total, 2),
+                        'sufficient': prorated_budget >= projected_total
+                    }
+                else:
+                    # Fallback if no budget period found
+                    budget_comparison = {
+                        'current_budget': available['budget_hours'],
+                        'projected_need': projected_total,
+                        'variance': available['budget_hours'] - projected_total,
+                        'sufficient': available['budget_hours'] >= projected_total
+                    }
         
         return {
             'child_id': child_id,

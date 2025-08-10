@@ -306,7 +306,7 @@
 }
 
 .comparison-metric {
-    text-align: center;
+    text-align: left;
 }
 
 .comparison-metric .value.positive {
