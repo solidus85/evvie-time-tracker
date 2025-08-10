@@ -223,11 +223,15 @@ App.prototype.validateCSV = async function() {
             <p><strong>Rows:</strong> ${result.rows}</p>
             ${result.errors.length > 0 ? `
                 <h4>Errors:</h4>
-                <ul>${result.errors.map(e => `<li>${e}</li>`).join('')}</ul>
+                <div class="import-messages">
+                    ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                </div>
             ` : ''}
             ${result.warnings.length > 0 ? `
                 <h4>Warnings:</h4>
-                <ul>${result.warnings.map(w => `<li>${w}</li>`).join('')}</ul>
+                <div class="import-messages">
+                    ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                </div>
             ` : ''}
         `;
     } catch (error) {
@@ -275,11 +279,15 @@ App.prototype.importCSV = async function() {
             <p><strong>Duplicates:</strong> ${result.duplicates}</p>
             ${result.errors.length > 0 ? `
                 <h4>Errors:</h4>
-                <ul>${result.errors.map(e => `<li>${e}</li>`).join('')}</ul>
+                <div class="import-messages">
+                    ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
+                </div>
             ` : ''}
             ${result.warnings.length > 0 ? `
                 <h4>Warnings:</h4>
-                <ul>${result.warnings.map(w => `<li>${w}</li>`).join('')}</ul>
+                <div class="import-messages">
+                    ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
+                </div>
             ` : ''}
         `;
         
