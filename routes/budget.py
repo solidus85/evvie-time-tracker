@@ -280,3 +280,12 @@ def get_budget_report(report_id):
         return jsonify(dict(report))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/reports/<int:report_id>', methods=['DELETE'])
+def delete_budget_report(report_id):
+    try:
+        parser = PDFBudgetParser(current_app.db)
+        parser.delete_budget_report(report_id)
+        return jsonify({'success': True, 'message': 'Report deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

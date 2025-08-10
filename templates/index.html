@@ -134,98 +134,29 @@
             </div>
 
             <div id="budget-view" class="view">
-                <h2>Budget Management</h2>
-                <div class="budget-tabs">
-                    <button class="tab-btn active" data-tab="child-budgets">Child Budgets</button>
-                    <button class="tab-btn" data-tab="employee-rates">Employee Rates</button>
-                    <button class="tab-btn" data-tab="allocations">Allocations</button>
-                    <button class="tab-btn" data-tab="utilization">Utilization</button>
-                    <button class="tab-btn" data-tab="reports">Budget Reports</button>
+                <h2>Budget Reports</h2>
+                <div class="reports-controls">
+                    <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
+                    <input type="file" id="pdf-report-file" accept=".pdf" style="display: none;">
+                    <button id="refresh-reports" class="btn-secondary">Refresh</button>
                 </div>
-                <div id="child-budgets-tab" class="tab-content active">
-                    <div class="budget-controls">
-                        <button id="add-budget" class="btn-primary">Add Budget</button>
-                        <button id="import-budgets" class="btn-primary">Import CSV</button>
-                        <input type="file" id="budget-csv-file" accept=".csv" style="display: none;">
-                    </div>
-                    <table id="budgets-table">
-                        <thead>
-                            <tr>
-                                <th>Child</th>
-                                <th>Period Start</th>
-                                <th>Period End</th>
-                                <th>Budget Hours</th>
-                                <th>Budget Amount</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <div id="employee-rates-tab" class="tab-content">
-                    <button id="add-rate" class="btn-primary">Add Rate</button>
-                    <table id="rates-table">
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Hourly Rate</th>
-                                <th>Effective Date</th>
-                                <th>End Date</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <div id="allocations-tab" class="tab-content">
-                    <div class="allocation-controls">
-                        <label>Period:
-                            <select id="allocation-period"></select>
-                        </label>
-                        <button id="add-allocation" class="btn-primary">Add Allocation</button>
-                    </div>
-                    <table id="allocations-table">
-                        <thead>
-                            <tr>
-                                <th>Child</th>
-                                <th>Employee</th>
-                                <th>Allocated Hours</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <div id="utilization-tab" class="tab-content">
-                    <div class="utilization-dashboard"></div>
-                </div>
-                <div id="reports-tab" class="tab-content">
-                    <div class="reports-controls">
-                        <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
-                        <input type="file" id="pdf-report-file" accept=".pdf" style="display: none;">
-                        <button id="refresh-reports" class="btn-secondary">Refresh</button>
-                    </div>
-                    <div id="report-upload-result" class="upload-result" style="display: none;"></div>
-                    <h3>Report History</h3>
-                    <table id="reports-table">
-                        <thead>
-                            <tr>
-                                <th>Report Date</th>
-                                <th>Child</th>
-                                <th>Period</th>
-                                <th>Total Budget</th>
-                                <th>Total Spent</th>
-                                <th>Utilization</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="report-details" class="report-details" style="display: none;"></div>
-                </div>
+                <div id="report-upload-result" class="upload-result" style="display: none;"></div>
+                <h3>Report History</h3>
+                <table id="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Report Date</th>
+                            <th>Child</th>
+                            <th>Period</th>
+                            <th>Total Budget</th>
+                            <th>Total Spent</th>
+                            <th>Utilization</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="report-details" class="report-details" style="display: none;"></div>
             </div>
 
             <div id="forecast-view" class="view">

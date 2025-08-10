@@ -252,3 +252,10 @@ class PDFBudgetParser:
             return report_dict
         
         return report
+    
+    def delete_budget_report(self, report_id: int) -> None:
+        """Delete a budget report by ID"""
+        self.db.execute(
+            "DELETE FROM budget_reports WHERE id = ?",
+            (report_id,)
+        )
