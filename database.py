@@ -104,6 +104,7 @@ class Database:
             ''')
             
             # Migration: rename max_hours_per_period to max_hours_per_week if needed
+            cursor = conn.cursor()
             cursor.execute("PRAGMA table_info(hour_limits)")
             columns = cursor.fetchall()
             column_names = [col[1] for col in columns]
