@@ -26,13 +26,27 @@ class ForecastService:
                 'average_daily_available': 0
             }
         
-        # Calculate days remaining in period
+        # Calculate days remaining in the selected period (for display)
         today = date.today()
         end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
         days_remaining = max(0, (end_date - today).days + 1)
         
-        available_hours = utilization['hours_remaining']
-        avg_daily = available_hours / days_remaining if days_remaining > 0 else 0
+        # Get the actual budget period for daily average calculation
+        budget = self.budget_service.get_budget_for_period(child_id, period_start, period_end)
+        if budget:
+            # Calculate total days in the BUDGET period (not the selected period)
+            budget_start_date = datetime.strptime(budget['period_start'], '%Y-%m-%d').date()
+            budget_end_date = datetime.strptime(budget['period_end'], '%Y-%m-%d').date()
+            total_budget_days = (budget_end_date - budget_start_date).days + 1
+            
+            # Daily average should be based on total budget period
+            available_hours = utilization['hours_remaining']
+            avg_daily = available_hours / total_budget_days if total_budget_days > 0 else 0
+        else:
+            # Fallback to selected period if no budget found
+            available_hours = utilization['hours_remaining']
+            total_days = (end_date - datetime.strptime(period_start, '%Y-%m-%d').date()).days + 1
+            avg_daily = available_hours / total_days if total_days > 0 else 0
         
         return {
             'child_id': child_id,
