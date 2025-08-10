@@ -225,7 +225,7 @@ App.prototype.analyzePatterns = async function() {
                 <p>Total Hours Analyzed: ${patterns.total_hours_analyzed.toFixed(2)}</p>
                 <p>Weekly Average: ${patterns.weekly_average_hours.toFixed(2)} hours</p>
                 
-                <h4>Weekly Pattern</h4>
+                <h4 style="margin-top: 30px;">Weekly Pattern</h4>
                 <div class="weekly-pattern">
                     ${patterns.weekly_patterns.map(day => `
                         <div class="day-pattern">
