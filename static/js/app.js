@@ -367,8 +367,8 @@ class App {
                 <td>${emp.system_name}</td>
                 <td>${emp.active ? 'Active' : 'Inactive'}</td>
                 <td>
-                    <button onclick="app.editEmployee(${emp.id})">Edit</button>
-                    <button onclick="app.deleteEmployee(${emp.id})">Delete</button>
+                    <button onclick="app.editEmployee(${emp.id})" class="btn-primary">Edit</button>
+                    <button onclick="app.deleteEmployee(${emp.id})" class="btn-secondary">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -383,8 +383,8 @@ class App {
                 <td>${child.code}</td>
                 <td>${child.active ? 'Active' : 'Inactive'}</td>
                 <td>
-                    <button onclick="app.editChild(${child.id})">Edit</button>
-                    <button onclick="app.deleteChild(${child.id})">Delete</button>
+                    <button onclick="app.editChild(${child.id})" class="btn-primary">Edit</button>
+                    <button onclick="app.deleteChild(${child.id})" class="btn-secondary">Delete</button>
                 </td>
             </tr>
         `).join('');

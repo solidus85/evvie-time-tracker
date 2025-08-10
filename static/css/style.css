@@ -405,6 +405,30 @@ th {
 
 .import-form input[type="file"] {
     margin-right: 10px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.import-form input[type="file"]:hover {
+    border-color: #3498db;
+}
+
+.import-form input[type="file"]::file-selector-button {
+    padding: 6px 12px;
+    background: #ecf0f1;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 10px;
+}
+
+.import-form input[type="file"]::file-selector-button:hover {
+    background: #bdc3c7;
 }
 
 .import-loading {
