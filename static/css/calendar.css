@@ -88,3 +88,31 @@
 .shift-entry:hover {
     background: #d0e9f2;
 }
+
+/* Exclusion entries in calendar */
+.exclusion-entry {
+    background: #ffcccc;
+    padding: 4px 6px;
+    margin: 3px 0;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: help;
+    white-space: normal;
+    line-height: 1.4;
+    word-break: break-word;
+    border-left: 3px solid #d32f2f;
+}
+
+.exclusion-entry .exclusion-label {
+    font-weight: 600;
+    color: #b71c1c;
+}
+
+.exclusion-entry .exclusion-name {
+    color: #d32f2f;
+    font-size: 10px;
+}
+
+.exclusion-entry:hover {
+    background: #ffb3b3;
+}

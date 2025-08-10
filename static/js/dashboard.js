@@ -17,8 +17,17 @@ App.prototype.loadDashboard = async function() {
     document.getElementById('period-label').textContent = 
         `${this.formatDate(this.currentPeriod.start_date)} - ${this.formatDate(this.currentPeriod.end_date)}`;
     
-    const shifts = await this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}&child_id=${this.selectedChildId}`);
+    // Fetch both shifts and exclusions for the period
+    const [shifts, exclusions] = await Promise.all([
+        this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}&child_id=${this.selectedChildId}`),
+        this.api(`/api/payroll/exclusions/for-period?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}`)
+    ]);
+    
+    // Store exclusions for use in calendar rendering and shift creation
+    this.currentExclusions = exclusions;
+    
     this.renderCalendar(this.currentPeriod, shifts);
+    this.renderExclusionsSummary(exclusions);
     
     // Calculate summary from filtered shifts
     this.renderChildSummaryFromShifts(shifts, this.selectedChildId);
@@ -73,11 +82,39 @@ App.prototype.renderCalendar = function(period, shifts) {
         dayNumber.textContent = currentDate.getDate();
         dayDiv.appendChild(dayNumber);
         
+        // Always show add button
         const addBtn = document.createElement('button');
         addBtn.className = 'day-add-btn';
         addBtn.textContent = '+';
         addBtn.onclick = () => this.showShiftForm(dateStr);
         dayDiv.appendChild(addBtn);
+        
+        // Display exclusions for this date
+        const dayExclusions = this.getExclusionsForDate(dateStr);
+        dayExclusions.forEach(exclusion => {
+            const exclusionDiv = document.createElement('div');
+            exclusionDiv.className = 'exclusion-entry';
+            
+            let label = 'Exclusion';
+            if (exclusion.employee_name) {
+                label = exclusion.employee_name;
+            } else if (exclusion.child_name) {
+                label = exclusion.child_name;
+            }
+            
+            // Show time range if specified, otherwise show "All day"
+            let timeRange = 'All day';
+            if (exclusion.start_time && exclusion.end_time) {
+                timeRange = `${this.formatTime(exclusion.start_time)}-${this.formatTime(exclusion.end_time)}`;
+            }
+            
+            exclusionDiv.innerHTML = `
+                <div class="exclusion-label">${label}</div>
+                <div class="exclusion-name">${timeRange}</div>
+            `;
+            exclusionDiv.title = `Exclusion: ${exclusion.name}${exclusion.reason ? ' - ' + exclusion.reason : ''}`;
+            dayDiv.appendChild(exclusionDiv);
+        });
         
         dayShifts.forEach(shift => {
             const shiftDiv = document.createElement('div');
@@ -216,4 +253,27 @@ App.prototype.parseHours = function(hoursStr) {
         return hours + minutes / 60;
     }
     return parseFloat(hoursStr);
+};
+
+App.prototype.getExclusionsForDate = function(dateStr) {
+    if (!this.currentExclusions || this.currentExclusions.length === 0) return [];
+    
+    // Filter exclusions that apply to this date and the selected child
+    return this.currentExclusions.filter(exclusion => {
+        // Check if date falls within exclusion period
+        if (dateStr >= exclusion.start_date && dateStr <= exclusion.end_date) {
+            // If it's a child-specific exclusion, only show if it matches the selected child
+            if (exclusion.child_id) {
+                return exclusion.child_id === this.selectedChildId;
+            }
+            // Show employee-specific and general exclusions
+            return true;
+        }
+        return false;
+    });
+};
+
+App.prototype.renderExclusionsSummary = function(exclusions) {
+    // Remove the exclusions summary section as exclusions are now shown in the calendar
+    // This function can be left empty or removed entirely
 };

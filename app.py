@@ -3,11 +3,19 @@ from flask_cors import CORS
 from config import Config
 from database import Database
 import os
+import logging
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     CORS(app)
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    app.logger.setLevel(logging.INFO)
     
     db = Database(app.config['DATABASE'])
     app.db = db

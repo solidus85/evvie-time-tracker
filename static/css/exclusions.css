@@ -1,0 +1,71 @@
+/* Exclusions page styling */
+
+.exclusions-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.exclusions-header {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exclusions-header h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.exclusions-description {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.exclusion-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.exclusions-table-wrapper {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#exclusions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#exclusions-table th {
+    background-color: #f5f5f5;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+#exclusions-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #666;
+}
+
+#exclusions-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+#exclusions-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#exclusions-table button {
+    margin-right: 5px;
+}

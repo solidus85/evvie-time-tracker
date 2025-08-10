@@ -78,9 +78,18 @@ class Database:
                     name TEXT NOT NULL,
                     start_date DATE NOT NULL,
                     end_date DATE NOT NULL,
+                    start_time TIME,
+                    end_time TIME,
+                    employee_id INTEGER,
+                    child_id INTEGER,
                     reason TEXT,
                     active BOOLEAN DEFAULT 1,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (employee_id) REFERENCES employees(id),
+                    FOREIGN KEY (child_id) REFERENCES children(id),
+                    CHECK ((employee_id IS NOT NULL AND child_id IS NULL) OR 
+                           (employee_id IS NULL AND child_id IS NOT NULL) OR
+                           (employee_id IS NULL AND child_id IS NULL))
                 );
                 
                 CREATE TABLE IF NOT EXISTS hour_limits (
@@ -103,8 +112,24 @@ class Database:
                 );
             ''')
             
-            # Migration: rename max_hours_per_period to max_hours_per_week if needed
+            # Migration: add time fields to exclusion_periods if needed
             cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(exclusion_periods)")
+            columns = cursor.fetchall()
+            column_names = [col[1] for col in columns]
+            
+            if 'start_time' not in column_names:
+                cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN start_time TIME')
+            if 'end_time' not in column_names:
+                cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN end_time TIME')
+            
+            # Migration: add employee_id and child_id to exclusion_periods if needed
+            if 'employee_id' not in column_names:
+                cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN employee_id INTEGER REFERENCES employees(id)')
+            if 'child_id' not in column_names:
+                cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN child_id INTEGER REFERENCES children(id)')
+            
+            # Migration: rename max_hours_per_period to max_hours_per_week if needed
             cursor.execute("PRAGMA table_info(hour_limits)")
             columns = cursor.fetchall()
             column_names = [col[1] for col in columns]

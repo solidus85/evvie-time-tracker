@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 class PayrollService:
     def __init__(self, db):
@@ -45,6 +45,39 @@ class PayrollService:
                 (start.isoformat(), end.isoformat())
             )
             start = end + timedelta(days=1)
+    
+    def navigate_period(self, period_id, direction):
+        """Navigate to the next or previous payroll period"""
+        # Get the current period
+        current_period = self.db.fetchone(
+            "SELECT * FROM payroll_periods WHERE id = ?",
+            (period_id,)
+        )
+        
+        if not current_period:
+            return None
+        
+        # Find the next or previous period based on direction
+        if direction == 1:  # Next period
+            next_period = self.db.fetchone(
+                """SELECT * FROM payroll_periods 
+                   WHERE start_date > ? 
+                   ORDER BY start_date ASC 
+                   LIMIT 1""",
+                (current_period['end_date'],)
+            )
+            return next_period
+        elif direction == -1:  # Previous period
+            prev_period = self.db.fetchone(
+                """SELECT * FROM payroll_periods 
+                   WHERE end_date < ? 
+                   ORDER BY end_date DESC 
+                   LIMIT 1""",
+                (current_period['start_date'],)
+            )
+            return prev_period
+        else:
+            return None
     
     def get_period_summary(self, period_id):
         period = self.db.fetchone(
@@ -96,10 +129,13 @@ class PayrollService:
         }
     
     def get_exclusion_periods(self, active_only=False):
-        query = "SELECT * FROM exclusion_periods"
+        query = """SELECT ep.*, e.friendly_name as employee_name, c.name as child_name
+                   FROM exclusion_periods ep
+                   LEFT JOIN employees e ON ep.employee_id = e.id
+                   LEFT JOIN children c ON ep.child_id = c.id"""
         if active_only:
-            query += " WHERE active = 1"
-        query += " ORDER BY start_date DESC"
+            query += " WHERE ep.active = 1"
+        query += " ORDER BY ep.start_date DESC"
         return self.db.fetchall(query)
     
     def get_active_exclusions_for_date(self, date):
@@ -109,14 +145,45 @@ class PayrollService:
             (date, date)
         )
     
-    def create_exclusion_period(self, name, start_date, end_date, reason=None):
+    def create_exclusion_period(self, name, start_date, end_date, start_time=None, end_time=None, 
+                               employee_id=None, child_id=None, reason=None):
         if start_date > end_date:
             raise ValueError("End date must be after or equal to start date")
         
+        if employee_id and child_id:
+            raise ValueError("An exclusion can only be for either an employee or a child, not both")
+        
         return self.db.insert(
-            "INSERT INTO exclusion_periods (name, start_date, end_date, reason) VALUES (?, ?, ?, ?)",
-            (name, start_date, end_date, reason)
+            """INSERT INTO exclusion_periods 
+               (name, start_date, end_date, start_time, end_time, employee_id, child_id, reason) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (name, start_date, end_date, start_time, end_time, employee_id, child_id, reason)
         )
+    
+    def update_exclusion_period(self, exclusion_id, name, start_date, end_date, start_time=None, end_time=None, 
+                                employee_id=None, child_id=None, reason=None):
+        result = self.db.fetchone(
+            "SELECT * FROM exclusion_periods WHERE id = ?",
+            (exclusion_id,)
+        )
+        
+        if not result:
+            return False
+        
+        if start_date > end_date:
+            raise ValueError("End date must be after or equal to start date")
+        
+        if employee_id and child_id:
+            raise ValueError("An exclusion can only be for either an employee or a child, not both")
+        
+        self.db.execute(
+            """UPDATE exclusion_periods 
+               SET name = ?, start_date = ?, end_date = ?, start_time = ?, end_time = ?, 
+                   employee_id = ?, child_id = ?, reason = ? 
+               WHERE id = ?""",
+            (name, start_date, end_date, start_time, end_time, employee_id, child_id, reason, exclusion_id)
+        )
+        return True
     
     def deactivate_exclusion_period(self, exclusion_id):
         result = self.db.fetchone(
@@ -132,3 +199,118 @@ class PayrollService:
             (exclusion_id,)
         )
         return True
+    
+    def get_exclusions_for_period(self, start_date, end_date):
+        return self.db.fetchall(
+            """SELECT ep.*, e.friendly_name as employee_name, c.name as child_name
+               FROM exclusion_periods ep
+               LEFT JOIN employees e ON ep.employee_id = e.id
+               LEFT JOIN children c ON ep.child_id = c.id
+               WHERE ep.active = 1 
+               AND ((ep.start_date <= ? AND ep.end_date >= ?)
+                    OR (ep.start_date <= ? AND ep.end_date >= ?)
+                    OR (ep.start_date >= ? AND ep.end_date <= ?))
+               ORDER BY ep.start_date""",
+            (end_date, start_date, start_date, start_date, start_date, end_date)
+        )
+    
+    def calculate_bulk_dates(self, start_date, end_date, days_of_week, weeks):
+        """Calculate all dates that match the pattern within the date range"""
+        # If no date range provided, use next 3 months
+        if not start_date:
+            start_date = date.today()
+        elif isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        
+        if not end_date:
+            end_date = start_date + timedelta(days=90)  # Default to 3 months
+        elif isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if start_date > end_date:
+            raise ValueError("End date must be after start date")
+        
+        # Limit to 6 months
+        if (end_date - start_date).days > 180:
+            raise ValueError("Date range cannot exceed 6 months")
+        
+        matching_dates = []
+        
+        # Get all payroll periods that overlap with the date range
+        periods = self.db.fetchall(
+            """SELECT * FROM payroll_periods 
+               WHERE start_date <= ? AND end_date >= ?
+               ORDER BY start_date""",
+            (end_date.isoformat(), start_date.isoformat())
+        )
+        
+        for period in periods:
+            period_start = datetime.strptime(period['start_date'], '%Y-%m-%d').date()
+            period_end = datetime.strptime(period['end_date'], '%Y-%m-%d').date()
+            
+            # Week 1 is first 7 days (Thu-Wed), Week 2 is last 7 days (Thu-Wed)
+            week1_end = period_start + timedelta(days=6)
+            week2_start = week1_end + timedelta(days=1)
+            
+            current = max(period_start, start_date)
+            period_last = min(period_end, end_date)
+            
+            while current <= period_last:
+                # Check if this day of week is selected
+                # Python weekday: 0=Mon, 6=Sun; JavaScript: 0=Sun, 6=Sat
+                python_weekday = current.weekday()
+                # Convert to JavaScript weekday format
+                js_weekday = (python_weekday + 1) % 7
+                
+                if js_weekday in days_of_week:
+                    # Determine which week this date is in
+                    if current <= week1_end:
+                        week_num = 1
+                    else:
+                        week_num = 2
+                    
+                    # Check if this week is selected
+                    if weeks == 'both' or (weeks == 'week1' and week_num == 1) or (weeks == 'week2' and week_num == 2):
+                        matching_dates.append({
+                            'date': current.isoformat(),
+                            'week': week_num
+                        })
+                
+                current += timedelta(days=1)
+        
+        return matching_dates
+    
+    def create_bulk_exclusions(self, name_pattern, start_date, end_date, days_of_week, weeks,
+                              start_time=None, end_time=None, employee_id=None, child_id=None, reason=None):
+        """Create multiple exclusion periods based on a pattern"""
+        if employee_id and child_id:
+            raise ValueError("An exclusion can only be for either an employee or a child, not both")
+        
+        # Get all matching dates
+        dates = self.calculate_bulk_dates(start_date, end_date, days_of_week, weeks)
+        
+        if not dates:
+            raise ValueError("No matching dates found for the specified pattern")
+        
+        # Day names for naming
+        day_names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        
+        count = 0
+        for date_info in dates:
+            date_obj = datetime.strptime(date_info['date'], '%Y-%m-%d').date()
+            js_weekday = (date_obj.weekday() + 1) % 7
+            day_name = day_names[js_weekday]
+            
+            # Create name with pattern and date
+            name = f"{name_pattern} - {day_name} {date_obj.strftime('%-m/%-d')}"
+            
+            # Create the exclusion for this specific date
+            self.db.insert(
+                """INSERT INTO exclusion_periods 
+                   (name, start_date, end_date, start_time, end_time, employee_id, child_id, reason) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (name, date_info['date'], date_info['date'], start_time, end_time, employee_id, child_id, reason)
+            )
+            count += 1
+        
+        return count

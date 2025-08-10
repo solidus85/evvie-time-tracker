@@ -34,6 +34,7 @@ class App {
         document.getElementById('add-child').addEventListener('click', () => this.showChildForm());
         document.getElementById('add-hour-limit').addEventListener('click', () => this.showHourLimitForm());
         document.getElementById('add-exclusion').addEventListener('click', () => this.showExclusionForm());
+        document.getElementById('bulk-add-exclusions').addEventListener('click', () => this.showBulkExclusionForm());
         
         // Import/Export
         document.getElementById('validate-csv').addEventListener('click', () => this.validateCSV());
@@ -108,7 +109,23 @@ class App {
         else if (viewName === 'exclusions') this.loadExclusions();
         else if (viewName === 'employees') this.loadEmployees();
         else if (viewName === 'children') this.loadChildren();
+        else if (viewName === 'export') this.loadExportView();
         else if (viewName === 'config') this.loadConfig();
+    }
+
+    loadExportView() {
+        // Set date fields to current period if available
+        if (this.currentPeriod) {
+            const startInput = document.getElementById('export-start');
+            const endInput = document.getElementById('export-end');
+            
+            if (startInput) {
+                startInput.value = this.currentPeriod.start_date;
+            }
+            if (endInput) {
+                endInput.value = this.currentPeriod.end_date;
+            }
+        }
     }
 
     async loadConfig() {
@@ -139,7 +156,13 @@ class App {
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.error || 'Request failed');
+            // Create an error with the full response data
+            const error = new Error(data.message || data.error || 'Request failed');
+            error.response = {
+                status: response.status,
+                data: data
+            };
+            throw error;
         }
         
         return data;

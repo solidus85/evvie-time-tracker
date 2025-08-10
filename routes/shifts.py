@@ -43,35 +43,74 @@ def create_shift():
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
         
+        # Convert IDs to integers (they come as strings from frontend)
+        try:
+            employee_id = int(data['employee_id'])
+            child_id = int(data['child_id'])
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid employee or child ID'}), 400
+        
         service = ShiftService(current_app.db)
         
-        warnings = service.validate_shift(
-            employee_id=data['employee_id'],
-            child_id=data['child_id'],
-            date=data['date'],
-            start_time=data['start_time'],
-            end_time=data['end_time']
-        )
+        # Validate the shift first - this will raise ValueError for conflicts
+        try:
+            warnings = service.validate_shift(
+                employee_id=employee_id,
+                child_id=child_id,
+                date=data['date'],
+                start_time=data['start_time'],
+                end_time=data['end_time']
+            )
+        except ValueError as e:
+            # Return conflict errors with clear messaging
+            error_msg = str(e)
+            current_app.logger.info(f"Validation error: {error_msg}")
+            # Check for overlapping (more generic to catch "an overlapping shift")
+            if 'overlapping' in error_msg.lower():
+                return jsonify({
+                    'error': 'Shift Conflict',
+                    'message': error_msg,
+                    'type': 'overlap'
+                }), 409  # 409 Conflict is more appropriate than 400
+            elif 'excluded' in error_msg.lower():
+                return jsonify({
+                    'error': 'Exclusion Period',
+                    'message': error_msg,
+                    'type': 'exclusion'
+                }), 409
+            else:
+                return jsonify({'error': error_msg}), 400
         
-        shift_id = service.create(
-            employee_id=data['employee_id'],
-            child_id=data['child_id'],
-            date=data['date'],
-            start_time=data['start_time'],
-            end_time=data['end_time'],
-            service_code=data.get('service_code'),
-            status=data.get('status', 'new')
-        )
+        # Create the shift if validation passed
+        try:
+            shift_id = service.create(
+                employee_id=employee_id,
+                child_id=child_id,
+                date=data['date'],
+                start_time=data['start_time'],
+                end_time=data['end_time'],
+                service_code=data.get('service_code'),
+                status=data.get('status', 'new')
+            )
+        except Exception as e:
+            # Handle database errors (like unique constraints)
+            current_app.logger.error(f"Failed to create shift: {str(e)}")
+            return jsonify({
+                'error': 'Failed to create shift',
+                'message': 'An unexpected error occurred while saving the shift. Please try again.'
+            }), 500
         
-        response = {'id': shift_id, 'message': 'Shift created'}
+        response = {'id': shift_id, 'message': 'Shift created successfully'}
         if warnings:
             response['warnings'] = warnings
         
         return jsonify(response), 201
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Unexpected error in create_shift: {str(e)}")
+        return jsonify({
+            'error': 'Unexpected error',
+            'message': 'An unexpected error occurred. Please try again.'
+        }), 500
 
 @bp.route('/<int:shift_id>', methods=['PUT'])
 def update_shift(shift_id):

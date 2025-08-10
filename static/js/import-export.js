@@ -146,14 +146,15 @@ App.prototype.importCSV = async function() {
                 <h3>Import Results</h3>
                 <p><strong>File:</strong> ${files[0].name}</p>
                 <p><strong>Imported:</strong> ${result.imported}</p>
+                <p><strong>Replaced:</strong> ${result.replaced || 0}</p>
                 <p><strong>Duplicates:</strong> ${result.duplicates}</p>
-                ${result.errors.length > 0 ? `
+                ${result.errors && result.errors.length > 0 ? `
                     <h4>Errors:</h4>
                     <div class="import-messages">
                         ${result.errors.map(e => `<div class="import-message error">${e}</div>`).join('')}
                     </div>
                 ` : ''}
-                ${result.warnings.length > 0 ? `
+                ${result.warnings && result.warnings.length > 0 ? `
                     <h4>Warnings:</h4>
                     <div class="import-messages">
                         ${result.warnings.map(w => `<div class="import-message warning">${w}</div>`).join('')}
@@ -161,7 +162,10 @@ App.prototype.importCSV = async function() {
                 ` : ''}
             `;
             
-            this.showToast(`Imported ${result.imported} shifts successfully`);
+            const message = result.replaced > 0 
+                ? `Imported ${result.imported} shifts and replaced ${result.replaced} manual entries`
+                : `Imported ${result.imported} shifts successfully`;
+            this.showToast(message);
         } else {
             // Multiple file import
             const formData = new FormData();
@@ -230,8 +234,9 @@ App.prototype.exportData = async function(format) {
         return;
     }
     
-    if (format === 'json') {
-        try {
+    try {
+        if (format === 'json') {
+            // JSON export - get data and create download
             const data = await this.api('/api/export/json', {
                 method: 'POST',
                 body: JSON.stringify({ start_date: startDate, end_date: endDate })
@@ -243,24 +248,39 @@ App.prototype.exportData = async function(format) {
             a.href = url;
             a.download = `timesheet_${startDate}_${endDate}.json`;
             a.click();
-        } catch (error) {
-            this.showToast('Export failed', 'error');
+            URL.revokeObjectURL(url);
+        } else {
+            // PDF and CSV export - fetch binary data
+            const response = await fetch(`/api/export/${format}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Export failed');
+            }
+            
+            // Get the blob from response
+            const blob = await response.blob();
+            
+            // Create download link
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `timesheet_${startDate}_${endDate}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showToast(`${format.toUpperCase()} exported successfully`);
         }
-    } else {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/api/export/${format}`;
-        form.style.display = 'none';
-        
-        const data = { start_date: startDate, end_date: endDate };
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'data';
-        input.value = JSON.stringify(data);
-        form.appendChild(input);
-        
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+    } catch (error) {
+        console.error('Export error:', error);
+        this.showToast(error.message || `Failed to export ${format.toUpperCase()}`, 'error');
     }
 };

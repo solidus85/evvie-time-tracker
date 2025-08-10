@@ -2,6 +2,7 @@
 
 App.prototype.showShiftForm = async function(date) {
     await this.loadInitialData();
+    
     const content = `
         <h2>Add Shift</h2>
         <form id="shift-form">
@@ -23,7 +24,7 @@ App.prototype.showShiftForm = async function(date) {
                 <select name="child_id" required>
                     <option value="">Select Child</option>
                     ${this.children.filter(c => c.active).map(c => 
-                        `<option value="${c.id}">${c.name}</option>`
+                        `<option value="${c.id}" ${c.id === this.selectedChildId ? 'selected' : ''}>${c.name}</option>`
                     ).join('')}
                 </select>
             </div>
@@ -65,24 +66,71 @@ App.prototype.showShiftForm = async function(date) {
             this.closeModal();
             this.loadDashboard();
         } catch (error) {
-            this.showToast(error.message, 'error');
+            // Check if it's a structured error response
+            if (error.response && error.response.status === 409) {
+                // Conflict error - show the detailed message
+                const errorData = error.response.data || error.response;
+                const message = errorData.message || errorData.error || 'Schedule conflict detected';
+                this.showToast(message, 'error');
+            } else {
+                // Generic error
+                this.showToast(error.message || 'Failed to create shift', 'error');
+            }
         }
     });
 };
 
 App.prototype.showShiftDetails = async function(shift) {
+    const hours = this.calculateShiftHours(shift.start_time, shift.end_time);
     const content = `
-        <h2>Shift Details</h2>
-        <p><strong>Date:</strong> ${this.formatDate(shift.date)}</p>
-        <p><strong>Employee:</strong> ${shift.employee_name}</p>
-        <p><strong>Child:</strong> ${shift.child_name}</p>
-        <p><strong>Time:</strong> ${this.formatTime(shift.start_time)} - ${this.formatTime(shift.end_time)}</p>
-        <p><strong>Service Code:</strong> ${shift.service_code || 'N/A'}</p>
-        <p><strong>Status:</strong> ${shift.status}</p>
-        <p><strong>Source:</strong> ${shift.is_imported ? 'Imported (Read-only)' : 'Manual Entry'}</p>
+        <div class="modal-header">
+            <h2>Shift Details</h2>
+        </div>
+        <div class="detail-container">
+            <div class="detail-section">
+                <div class="detail-row">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">${this.formatDate(shift.date)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Employee</span>
+                    <span class="detail-value">${shift.employee_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Child</span>
+                    <span class="detail-value">${shift.child_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">${this.formatTime(shift.start_time)} - ${this.formatTime(shift.end_time)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">${hours} hours</span>
+                </div>
+                ${shift.service_code ? `
+                <div class="detail-row">
+                    <span class="detail-label">Service Code</span>
+                    <span class="detail-value">${shift.service_code}</span>
+                </div>
+                ` : ''}
+            </div>
+            <div class="detail-section detail-meta">
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value status-${shift.status}">${shift.status}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Source</span>
+                    <span class="detail-value">${shift.is_imported ? '📥 Imported (Read-only)' : '✏️ Manual Entry'}</span>
+                </div>
+            </div>
+        </div>
         ${!shift.is_imported ? `
-            <button onclick="app.editShift(${shift.id})" class="btn-primary">Edit</button>
-            <button onclick="app.deleteShift(${shift.id})" class="btn-secondary">Delete</button>
+            <div class="modal-actions">
+                <button onclick="app.editShift(${shift.id})" class="btn-primary">Edit Shift</button>
+                <button onclick="app.deleteShift(${shift.id})" class="btn-secondary">Delete Shift</button>
+            </div>
         ` : ''}
     `;
     this.showModal(content);

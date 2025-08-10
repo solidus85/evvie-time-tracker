@@ -102,6 +102,7 @@ class ImportService:
         
         imported = 0
         duplicates = 0
+        replaced = 0  # Track replaced manual shifts
         errors = []
         warnings = []
         
@@ -130,15 +131,24 @@ class ImportService:
                 else:
                     child_id = child['id']
                 
+                # Check for existing shift with matching employee, child, date, and times
                 existing = self.db.fetchone(
                     """SELECT * FROM shifts
-                       WHERE employee_id = ? AND child_id = ? AND date = ? AND start_time = ?""",
-                    (employee_id, child_id, parsed['date'], parsed['start_time'])
+                       WHERE employee_id = ? AND child_id = ? AND date = ? 
+                       AND start_time = ? AND end_time = ?""",
+                    (employee_id, child_id, parsed['date'], parsed['start_time'], parsed['end_time'])
                 )
                 
                 if existing:
-                    duplicates += 1
-                    continue
+                    if not existing['is_imported']:
+                        # Delete the manual shift - imported takes precedence
+                        self.shift_service.delete(existing['id'])
+                        replaced += 1
+                        # Continue to import the new shift
+                    else:
+                        # Already imported, skip as duplicate
+                        duplicates += 1
+                        continue
                 
                 try:
                     shift_warnings = self.shift_service.validate_shift(
@@ -176,6 +186,7 @@ class ImportService:
         return {
             'imported': imported,
             'duplicates': duplicates,
+            'replaced': replaced,
             'errors': errors,
             'warnings': warnings
         }

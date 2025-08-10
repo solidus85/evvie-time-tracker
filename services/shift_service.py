@@ -53,19 +53,58 @@ class ShiftService:
         if start_time >= end_time:
             raise ValueError("End time must be after start time")
         
-        exclusions = self.payroll_service.get_active_exclusions_for_date(date)
+        # Check for exclusions that would block this shift
+        exclusions = self.check_exclusions(employee_id, child_id, date, start_time, end_time)
         if exclusions:
-            warnings.append(f"Date falls within exclusion period: {exclusions[0]['name']}")
+            for exclusion in exclusions:
+                # Ensure integer comparison (handle both int and potential string from DB)
+                if exclusion['employee_id'] and int(exclusion['employee_id']) == int(employee_id):
+                    raise ValueError(f"Employee is excluded during this period: {exclusion['name']}")
+                elif exclusion['child_id'] and int(exclusion['child_id']) == int(child_id):
+                    raise ValueError(f"Child is excluded during this period: {exclusion['name']}")
+                else:
+                    warnings.append(f"General exclusion period active: {exclusion['name']}")
         
         overlaps = self.check_overlaps(employee_id, child_id, date, start_time, end_time, exclude_shift_id)
         if overlaps['employee']:
-            msg = f"Employee has overlapping shift from {overlaps['employee']['start_time']} to {overlaps['employee']['end_time']}"
+            # Get employee name for better error message
+            try:
+                employee = self.db.fetchone("SELECT friendly_name FROM employees WHERE id = ?", (employee_id,))
+                emp_name = employee['friendly_name'] if employee else f"Employee #{employee_id}"
+            except:
+                emp_name = f"Employee #{employee_id}"
+            
+            # Format times for display with fallback
+            try:
+                overlap_start = self.format_time_for_display(overlaps['employee']['start_time'])
+                overlap_end = self.format_time_for_display(overlaps['employee']['end_time'])
+            except:
+                overlap_start = overlaps['employee']['start_time']
+                overlap_end = overlaps['employee']['end_time']
+            
+            msg = f"{emp_name} already has an overlapping shift from {overlap_start} to {overlap_end} on this date"
             if allow_overlaps:
                 warnings.append(msg)
             else:
                 raise ValueError(msg)
+                
         if overlaps['child']:
-            msg = f"Child has overlapping shift from {overlaps['child']['start_time']} to {overlaps['child']['end_time']}"
+            # Get child name for better error message
+            try:
+                child = self.db.fetchone("SELECT name FROM children WHERE id = ?", (child_id,))
+                child_name = child['name'] if child else f"Child #{child_id}"
+            except:
+                child_name = f"Child #{child_id}"
+            
+            # Format times for display with fallback
+            try:
+                overlap_start = self.format_time_for_display(overlaps['child']['start_time'])
+                overlap_end = self.format_time_for_display(overlaps['child']['end_time'])
+            except:
+                overlap_start = overlaps['child']['start_time']
+                overlap_end = overlaps['child']['end_time']
+            
+            msg = f"{child_name} already has an overlapping shift from {overlap_start} to {overlap_end} on this date"
             if allow_overlaps:
                 warnings.append(msg)
             else:
@@ -76,6 +115,31 @@ class ShiftService:
             warnings.append(hour_warning)
         
         return warnings
+    
+    def check_exclusions(self, employee_id, child_id, date, start_time, end_time):
+        """Check if the shift violates any exclusion periods"""
+        query = """
+            SELECT * FROM exclusion_periods
+            WHERE active = 1 
+            AND start_date <= ? AND end_date >= ?
+            AND (employee_id = ? OR child_id = ? OR (employee_id IS NULL AND child_id IS NULL))
+        """
+        params = [date, date, employee_id, child_id]
+        
+        exclusions = self.db.fetchall(query, params)
+        
+        # Filter by time if exclusion has time constraints
+        relevant_exclusions = []
+        for exc in exclusions:
+            if exc['start_time'] and exc['end_time']:
+                # Check if shift time overlaps with exclusion time
+                if not (end_time <= exc['start_time'] or start_time >= exc['end_time']):
+                    relevant_exclusions.append(exc)
+            else:
+                # No time constraints, entire day is excluded
+                relevant_exclusions.append(exc)
+        
+        return relevant_exclusions
     
     def check_overlaps(self, employee_id, child_id, date, start_time, end_time, exclude_shift_id=None):
         query = """
@@ -100,9 +164,10 @@ class ShiftService:
         
         result = {'employee': None, 'child': None}
         for overlap in overlaps:
-            if overlap['employee_id'] == employee_id:
+            # Ensure integer comparison for IDs
+            if int(overlap['employee_id']) == int(employee_id):
                 result['employee'] = overlap
-            if overlap['child_id'] == child_id:
+            if int(overlap['child_id']) == int(child_id):
                 result['child'] = overlap
         
         return result
@@ -125,10 +190,10 @@ class ShiftService:
         # Calculate week boundaries
         if week_number == 1:
             week_start = period['start_date']
-            week_end_date = period_start + datetime.timedelta(days=6)
+            week_end_date = period_start + timedelta(days=6)
             week_end = week_end_date.strftime("%Y-%m-%d")
         else:
-            week_start_date = period_start + datetime.timedelta(days=7)
+            week_start_date = period_start + timedelta(days=7)
             week_start = week_start_date.strftime("%Y-%m-%d")
             week_end = period['end_date']
         
@@ -143,12 +208,34 @@ class ShiftService:
         
         total_hours = existing_hours + new_hours
         
-        if total_hours > limit['max_hours_per_week']:
+        # Round to 1 decimal place to avoid floating-point precision issues
+        total_hours_rounded = round(total_hours, 1)
+        max_hours_rounded = round(limit['max_hours_per_week'], 1)
+        
+        if total_hours_rounded > max_hours_rounded:
             return f"Week {week_number} hours ({total_hours:.1f}) exceeds weekly limit ({limit['max_hours_per_week']:.1f}) for this employee/child pair"
-        elif limit['alert_threshold'] and total_hours > limit['alert_threshold']:
-            return f"Week {week_number} hours ({total_hours:.1f}) exceeds alert threshold ({limit['alert_threshold']:.1f}) for this employee/child pair"
+        elif limit['alert_threshold']:
+            threshold_rounded = round(limit['alert_threshold'], 1)
+            if total_hours_rounded > threshold_rounded:
+                return f"Week {week_number} hours ({total_hours:.1f}) exceeds alert threshold ({limit['alert_threshold']:.1f}) for this employee/child pair"
         
         return None
+    
+    def format_time_for_display(self, time_str):
+        """Convert HH:MM:SS to readable format like 9:00 AM"""
+        try:
+            # Parse the time string
+            time_obj = datetime.strptime(time_str, "%H:%M:%S")
+            # Format as 12-hour time with AM/PM (Windows compatible)
+            # Use %I instead of %-I and manually strip leading zeros
+            formatted = time_obj.strftime("%I:%M %p")
+            # Remove leading zero from hour if present
+            if formatted[0] == '0':
+                formatted = formatted[1:]
+            return formatted
+        except Exception as e:
+            # If parsing fails, return the original string
+            return time_str
     
     def calculate_period_hours(self, employee_id, child_id, start_date, end_date, exclude_shift_id=None):
         query = """

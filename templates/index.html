@@ -39,21 +39,31 @@
             </div>
 
             <div id="exclusions-view" class="view">
-                <h2>Exclusion Periods</h2>
-                <p>Define periods when manual shift entry should be blocked (e.g., when data is imported from external system)</p>
-                <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
-                <table id="exclusions-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Reason</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="exclusions-container">
+                    <div class="exclusions-header">
+                        <h2>Exclusion Periods</h2>
+                        <p class="exclusions-description">Define periods when manual shift entry should be blocked (e.g., when data is imported from external system)</p>
+                        <div class="exclusion-buttons">
+                            <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
+                            <button id="bulk-add-exclusions" class="btn-primary">Bulk Add Exclusions</button>
+                        </div>
+                    </div>
+                    <div class="exclusions-table-wrapper">
+                        <table id="exclusions-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Applies To</th>
+                                    <th>Start Date/Time</th>
+                                    <th>End Date/Time</th>
+                                    <th>Reason</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div id="employees-view" class="view">
