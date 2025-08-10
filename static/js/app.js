@@ -95,9 +95,8 @@ class App {
         const shifts = await this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}&child_id=${this.selectedChildId}`);
         this.renderCalendar(this.currentPeriod, shifts);
         
-        // Filter summary to only show selected child's data
-        const summary = await this.api(`/api/payroll/periods/${this.currentPeriod.id}/summary`);
-        this.renderChildSummary(summary, this.selectedChildId);
+        // Calculate summary from filtered shifts
+        this.renderChildSummaryFromShifts(shifts, this.selectedChildId);
     }
     
     populateChildDropdown() {
@@ -141,7 +140,8 @@ class App {
             }
             
             const dateStr = currentDate.toISOString().split('T')[0];
-            const dayShifts = shifts.filter(s => s.date === dateStr);
+            const dayShifts = shifts.filter(s => s.date === dateStr)
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
             
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
@@ -158,6 +158,9 @@ class App {
                 const shiftDiv = document.createElement('div');
                 shiftDiv.className = 'shift-entry';
                 if (shift.is_imported) shiftDiv.classList.add('imported');
+                if (shift.service_code && shift.service_code.toLowerCase().includes('paid parent of minor')) {
+                    shiftDiv.classList.add('parent-paid');
+                }
                 
                 const startTime = this.formatTime(shift.start_time);
                 const endTime = this.formatTime(shift.end_time);
@@ -201,21 +204,88 @@ class App {
         `;
     }
     
+    renderChildSummaryFromShifts(shifts, childId) {
+        const selectedChild = this.children.find(c => c.id === childId);
+        const childName = selectedChild ? selectedChild.name : 'Unknown';
+        
+        // Calculate employee hours from actual shifts
+        const employeeHours = {};
+        let totalHours = 0;
+        
+        shifts.forEach(shift => {
+            const hours = this.calculateShiftHours(shift.start_time, shift.end_time);
+            const hoursNum = this.parseHours(hours);
+            
+            if (!employeeHours[shift.employee_name]) {
+                employeeHours[shift.employee_name] = 0;
+            }
+            employeeHours[shift.employee_name] += hoursNum;
+            totalHours += hoursNum;
+        });
+        
+        // Convert to array and sort
+        const employeeBreakdown = Object.entries(employeeHours)
+            .map(([name, hours]) => ({ name, hours: hours.toFixed(2) }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        
+        const summaryDiv = document.getElementById('period-summary');
+        summaryDiv.innerHTML = `
+            <h3>Period Summary for ${childName}</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">Total Hours</div>
+                    <div class="value">${totalHours.toFixed(2)}</div>
+                </div>
+                ${employeeBreakdown.map(emp => `
+                    <div class="summary-item">
+                        <div class="label">${emp.name}</div>
+                        <div class="value">${emp.hours} hrs</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    parseHours(hoursStr) {
+        // Convert hour string (e.g., "8", "8.5", "8:45") to decimal
+        if (hoursStr.includes(':')) {
+            const [hours, minutes] = hoursStr.split(':').map(Number);
+            return hours + minutes / 60;
+        }
+        return parseFloat(hoursStr);
+    }
+    
     renderChildSummary(summary, childId) {
         const selectedChild = this.children.find(c => c.id === childId);
         const childName = selectedChild ? selectedChild.name : 'Unknown';
         
-        // Count shifts for selected child from the full summary
-        let childShifts = 0;
+        // Find child total hours
         let childHours = 0;
-        
-        // Find child hours in the summary
         for (const key in summary.child_hours) {
             if (key.startsWith(`${childId}_`)) {
                 childHours = summary.child_hours[key];
                 break;
             }
         }
+        
+        // Build employee hours breakdown for this child
+        const employeeBreakdown = [];
+        for (const key in summary.employee_hours) {
+            const [empId, empName] = key.split('_');
+            const hours = summary.employee_hours[key];
+            
+            // We need to check if this employee worked with this child
+            // Since we're filtering by child, all hours shown are for this child
+            if (hours > 0) {
+                employeeBreakdown.push({
+                    name: empName || 'Unknown',
+                    hours: hours
+                });
+            }
+        }
+        
+        // Sort employees by name
+        employeeBreakdown.sort((a, b) => a.name.localeCompare(b.name));
         
         const summaryDiv = document.getElementById('period-summary');
         summaryDiv.innerHTML = `
@@ -225,6 +295,12 @@ class App {
                     <div class="label">Total Hours</div>
                     <div class="value">${childHours || 0}</div>
                 </div>
+                ${employeeBreakdown.map(emp => `
+                    <div class="summary-item">
+                        <div class="label">${emp.name}</div>
+                        <div class="value">${emp.hours} hrs</div>
+                    </div>
+                `).join('')}
             </div>
         `;
     }

@@ -196,6 +196,15 @@ nav {
     font-size: 10px;
 }
 
+.shift-entry.parent-paid {
+    background: #e3f2fd;
+}
+
+.shift-entry.parent-paid.imported {
+    background: #e1f5fe;
+    border-left: 3px solid #64b5f6;
+}
+
 .shift-entry.imported {
     background: #f0f0f0;
     border-left: 3px solid #95a5a6;
