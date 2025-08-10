@@ -11,13 +11,9 @@ App.prototype.loadForecast = async function() {
     document.getElementById('refresh-forecast').addEventListener('click', () => this.loadAvailableHours());
     document.getElementById('analyze-patterns').addEventListener('click', () => this.analyzePatterns());
     document.getElementById('generate-projection').addEventListener('click', () => this.generateProjection());
-    document.getElementById('generate-recommendations').addEventListener('click', () => this.generateRecommendations());
     
     // Populate child dropdowns
     this.populateForecastChildDropdowns();
-    
-    // Load periods for recommendation dropdown
-    await this.loadRecommendationPeriods();
     
     // Set default dates for forecast
     this.setDefaultForecastDates();
@@ -66,21 +62,6 @@ App.prototype.populateForecastChildDropdowns = function() {
     document.getElementById('projection-child').innerHTML = childOptions;
 };
 
-App.prototype.loadRecommendationPeriods = async function() {
-    try {
-        const periods = await this.api('/api/payroll/periods');
-        const select = document.getElementById('recommendation-period');
-        
-        select.innerHTML = '<option value="">Select Period</option>' +
-            periods.map(period => `
-                <option value="${period.id}">
-                    ${this.formatDate(period.start_date)} - ${this.formatDate(period.end_date)}
-                </option>
-            `).join('');
-    } catch (error) {
-        console.error('Failed to load periods:', error);
-    }
-};
 
 App.prototype.formatHoursWithCommas = function(hours) {
     // Truncate (round down) and add commas
@@ -339,112 +320,5 @@ App.prototype.generateProjection = async function() {
     } catch (error) {
         this.showToast('Failed to generate projection', 'error');
         console.error('Projection error:', error);
-    }
-};
-
-App.prototype.generateRecommendations = async function() {
-    const periodId = document.getElementById('recommendation-period').value;
-    
-    if (!periodId) {
-        this.showToast('Please select a period', 'error');
-        return;
-    }
-    
-    try {
-        const recommendations = await this.api(
-            `/api/forecast/recommendations?period_id=${periodId}`
-        );
-        
-        const display = document.getElementById('recommendations-display');
-        
-        if (!recommendations.recommendations || recommendations.recommendations.length === 0) {
-            display.innerHTML = '<p>No recommendations available for this period</p>';
-            return;
-        }
-        
-        // Group recommendations by child
-        const byChild = {};
-        recommendations.recommendations.forEach(rec => {
-            if (!byChild[rec.child_name]) {
-                byChild[rec.child_name] = {
-                    child_name: rec.child_name,
-                    budget_hours: rec.budget_hours,
-                    allocations: []
-                };
-            }
-            byChild[rec.child_name].allocations.push(rec);
-        });
-        
-        display.innerHTML = `
-            <div class="recommendations-results">
-                <h3>Allocation Recommendations</h3>
-                <p>Period: ${this.formatDate(recommendations.period_start)} to ${this.formatDate(recommendations.period_end)}</p>
-                
-                ${Object.values(byChild).map(child => {
-                    const totalRecommended = child.allocations.reduce((sum, a) => sum + a.recommended_hours, 0);
-                    const withinBudget = totalRecommended <= child.budget_hours;
-                    
-                    return `
-                        <div class="recommendation-card">
-                            <h4>${child.child_name}</h4>
-                            <div class="budget-info">
-                                Budget: ${child.budget_hours} hrs | 
-                                Recommended: ${totalRecommended.toFixed(2)} hrs
-                                <span class="${withinBudget ? 'status-ok' : 'status-warning'}">
-                                    ${withinBudget ? '✓' : '⚠'}
-                                </span>
-                            </div>
-                            <table class="recommendation-table">
-                                <thead>
-                                    <tr>
-                                        <th>Employee</th>
-                                        <th>Recommended Hours</th>
-                                        <th>Based On</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${child.allocations.map(alloc => `
-                                        <tr>
-                                            <td>${alloc.employee_name}</td>
-                                            <td>${alloc.recommended_hours}</td>
-                                            <td>${alloc.based_on_percent}%</td>
-                                            <td>
-                                                <button onclick="app.applyRecommendation(${periodId}, ${alloc.child_id}, ${alloc.employee_id}, ${alloc.recommended_hours})" 
-                                                        class="btn-primary">Apply</button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    } catch (error) {
-        this.showToast('Failed to generate recommendations', 'error');
-        console.error('Recommendations error:', error);
-    }
-};
-
-App.prototype.applyRecommendation = async function(periodId, childId, employeeId, hours) {
-    try {
-        await this.api('/api/budget/allocations', {
-            method: 'POST',
-            body: JSON.stringify({
-                period_id: periodId,
-                child_id: childId,
-                employee_id: employeeId,
-                allocated_hours: hours,
-                notes: 'Applied from forecast recommendation'
-            })
-        });
-        
-        this.showToast('Allocation applied successfully');
-        // Optionally refresh recommendations
-        await this.generateRecommendations();
-    } catch (error) {
-        this.showToast('Failed to apply recommendation', 'error');
     }
 };
