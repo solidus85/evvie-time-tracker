@@ -230,44 +230,100 @@ class BudgetService:
         if not budget:
             return None
         
-        # Get actual hours worked
-        actual = self.db.fetchone(
-            """SELECT SUM((julianday(date || ' ' || end_time) - 
-                          julianday(date || ' ' || start_time)) * 24) as total_hours,
-                      COUNT(*) as shift_count
-               FROM shifts
-               WHERE child_id = ? AND date >= ? AND date <= ?""",
-            (child_id, period_start, period_end)
+        # Check if we have a budget report for this period
+        report = self.db.fetchone(
+            """SELECT * FROM budget_reports 
+               WHERE child_id = ? 
+               AND period_start <= ? 
+               AND period_end >= ?
+               ORDER BY report_date DESC
+               LIMIT 1""",
+            (child_id, period_end, period_start)
         )
         
-        # Calculate costs if rates are available
-        cost_query = """
-            SELECT SUM(
-                (julianday(s.date || ' ' || s.end_time) - 
-                 julianday(s.date || ' ' || s.start_time)) * 24 * 
-                COALESCE(er.hourly_rate, e.hourly_rate, 0)
-            ) as total_cost
-            FROM shifts s
-            JOIN employees e ON s.employee_id = e.id
-            LEFT JOIN employee_rates er ON er.employee_id = e.id
-                AND er.effective_date <= s.date
-                AND (er.end_date IS NULL OR er.end_date >= s.date)
-            WHERE s.child_id = ? AND s.date >= ? AND s.date <= ?
-        """
-        cost_result = self.db.fetchone(cost_query, (child_id, period_start, period_end))
+        total_hours_used = 0
+        total_cost_used = 0
+        
+        if report:
+            # Use the spending from the PDF report as the baseline
+            import json
+            try:
+                report_data = json.loads(report['report_data'])
+                
+                # Calculate average hourly rate from the report
+                total_report_hours = 0
+                total_report_amount = 0
+                
+                if 'employee_spending_summary' in report_data:
+                    for emp_name, emp_data in report_data['employee_spending_summary'].items():
+                        total_report_hours += emp_data.get('total_hours', 0)
+                        total_report_amount += emp_data.get('total_amount', 0)
+                
+                # Use average rate to convert spent amount to hours
+                avg_rate = (total_report_amount / total_report_hours) if total_report_hours > 0 else 25.0
+                
+                # The report shows cumulative spending up to the report date
+                total_cost_used = report['total_spent'] or 0
+                total_hours_used = total_cost_used / avg_rate if avg_rate > 0 else 0
+                
+                # Now add any manual shifts that occurred AFTER the report date
+                # This ensures we don't double-count hours
+                additional_shifts = self.db.fetchone(
+                    """SELECT SUM((julianday(date || ' ' || end_time) - 
+                                  julianday(date || ' ' || start_time)) * 24) as total_hours
+                       FROM shifts
+                       WHERE child_id = ? AND date > ? AND date <= ?""",
+                    (child_id, report['report_date'], period_end)
+                )
+                
+                if additional_shifts and additional_shifts['total_hours']:
+                    total_hours_used += additional_shifts['total_hours']
+                    # Estimate cost for additional shifts
+                    total_cost_used += additional_shifts['total_hours'] * avg_rate
+                    
+            except (json.JSONDecodeError, KeyError):
+                # Fallback to manual shifts only if report parsing fails
+                pass
+        
+        # If no report or parsing failed, use manual shifts only
+        if total_hours_used == 0:
+            actual = self.db.fetchone(
+                """SELECT SUM((julianday(date || ' ' || end_time) - 
+                              julianday(date || ' ' || start_time)) * 24) as total_hours,
+                          COUNT(*) as shift_count
+                   FROM shifts
+                   WHERE child_id = ? AND date >= ? AND date <= ?""",
+                (child_id, period_start, period_end)
+            )
+            
+            total_hours_used = actual['total_hours'] or 0
+            
+            # Calculate costs if rates are available
+            cost_query = """
+                SELECT SUM(
+                    (julianday(s.date || ' ' || s.end_time) - 
+                     julianday(s.date || ' ' || s.start_time)) * 24 * 
+                    COALESCE(er.hourly_rate, e.hourly_rate, 25)
+                ) as total_cost
+                FROM shifts s
+                JOIN employees e ON s.employee_id = e.id
+                LEFT JOIN employee_rates er ON er.employee_id = e.id
+                    AND er.effective_date <= s.date
+                    AND (er.end_date IS NULL OR er.end_date >= s.date)
+                WHERE s.child_id = ? AND s.date >= ? AND s.date <= ?
+            """
+            cost_result = self.db.fetchone(cost_query, (child_id, period_start, period_end))
+            total_cost_used = cost_result['total_cost'] or 0
         
         return {
             'budget_amount': budget['budget_amount'],
             'budget_hours': budget['budget_hours'],
-            'actual_hours': actual['total_hours'] or 0,
-            'actual_cost': cost_result['total_cost'] or 0,
-            'shift_count': actual['shift_count'] or 0,
-            'hours_remaining': (budget['budget_hours'] or 0) - (actual['total_hours'] or 0),
-            'amount_remaining': (budget['budget_amount'] or 0) - (cost_result['total_cost'] or 0),
-            'utilization_percent': (
-                ((actual['total_hours'] or 0) / budget['budget_hours'] * 100) 
-                if budget['budget_hours'] else 0
-            )
+            'actual_hours': round(total_hours_used, 2),
+            'actual_cost': round(total_cost_used, 2),
+            'shift_count': 0,  # Not tracking this anymore since we use report data
+            'hours_remaining': round((budget['budget_hours'] or 0) - total_hours_used, 2),
+            'amount_remaining': round((budget['budget_amount'] or 0) - total_cost_used, 2),
+            'utilization_percent': round((total_hours_used / budget['budget_hours'] * 100) if budget['budget_hours'] else 0, 2)
         }
     
     def import_budgets_csv(self, file):
