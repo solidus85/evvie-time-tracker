@@ -345,6 +345,57 @@ th {
     color: #2c3e50;
 }
 
+.employee-weekly-breakdown {
+    margin-top: 15px;
+}
+
+.employee-section {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.weekly-hours {
+    margin-left: 15px;
+}
+
+.week-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+.week-label {
+    color: #7f8c8d;
+    min-width: 60px;
+}
+
+.week-value {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.week-row.total-row {
+    border-top: 1px solid #ecf0f1;
+    padding-top: 4px;
+    margin-top: 6px;
+}
+
+.hours-warning {
+    color: #f44336 !important;
+    font-weight: bold;
+}
+
 .import-form, .export-form {
     margin: 20px 0;
     padding: 20px;

@@ -208,24 +208,46 @@ class App {
         const selectedChild = this.children.find(c => c.id === childId);
         const childName = selectedChild ? selectedChild.name : 'Unknown';
         
-        // Calculate employee hours from actual shifts
-        const employeeHours = {};
+        // Calculate week boundary (7 days after period start)
+        const periodStart = new Date(this.currentPeriod.start_date + 'T00:00:00');
+        const weekBoundary = new Date(periodStart);
+        weekBoundary.setDate(weekBoundary.getDate() + 7);
+        const weekBoundaryStr = weekBoundary.toISOString().split('T')[0];
+        
+        // Calculate employee hours by week
+        const employeeWeeklyHours = {};
         let totalHours = 0;
         
         shifts.forEach(shift => {
             const hours = this.calculateShiftHours(shift.start_time, shift.end_time);
             const hoursNum = this.parseHours(hours);
+            const isWeek1 = shift.date < weekBoundaryStr;
             
-            if (!employeeHours[shift.employee_name]) {
-                employeeHours[shift.employee_name] = 0;
+            if (!employeeWeeklyHours[shift.employee_name]) {
+                employeeWeeklyHours[shift.employee_name] = {
+                    week1: 0,
+                    week2: 0,
+                    total: 0
+                };
             }
-            employeeHours[shift.employee_name] += hoursNum;
+            
+            if (isWeek1) {
+                employeeWeeklyHours[shift.employee_name].week1 += hoursNum;
+            } else {
+                employeeWeeklyHours[shift.employee_name].week2 += hoursNum;
+            }
+            employeeWeeklyHours[shift.employee_name].total += hoursNum;
             totalHours += hoursNum;
         });
         
         // Convert to array and sort
-        const employeeBreakdown = Object.entries(employeeHours)
-            .map(([name, hours]) => ({ name, hours: hours.toFixed(2) }))
+        const employeeBreakdown = Object.entries(employeeWeeklyHours)
+            .map(([name, hours]) => ({
+                name,
+                week1: hours.week1.toFixed(2),
+                week2: hours.week2.toFixed(2),
+                total: hours.total.toFixed(2)
+            }))
             .sort((a, b) => a.name.localeCompare(b.name));
         
         const summaryDiv = document.getElementById('period-summary');
@@ -233,13 +255,29 @@ class App {
             <h3>Period Summary for ${childName}</h3>
             <div class="summary-grid">
                 <div class="summary-item">
-                    <div class="label">Total Hours</div>
+                    <div class="label">Total Hours (All Employees)</div>
                     <div class="value">${totalHours.toFixed(2)}</div>
                 </div>
+            </div>
+            <h4 style="margin-top: 20px; margin-bottom: 10px;">Employee Breakdown (Thursday-Wednesday weeks)</h4>
+            <div class="employee-weekly-breakdown">
                 ${employeeBreakdown.map(emp => `
-                    <div class="summary-item">
-                        <div class="label">${emp.name}</div>
-                        <div class="value">${emp.hours} hrs</div>
+                    <div class="employee-section">
+                        <div class="employee-name">${emp.name}</div>
+                        <div class="weekly-hours">
+                            <div class="week-row">
+                                <span class="week-label">Week 1:</span>
+                                <span class="week-value ${parseFloat(emp.week1) > 40 ? 'hours-warning' : ''}">${emp.week1} hrs${parseFloat(emp.week1) > 40 ? ' ⚠️' : ''}</span>
+                            </div>
+                            <div class="week-row">
+                                <span class="week-label">Week 2:</span>
+                                <span class="week-value ${parseFloat(emp.week2) > 40 ? 'hours-warning' : ''}">${emp.week2} hrs${parseFloat(emp.week2) > 40 ? ' ⚠️' : ''}</span>
+                            </div>
+                            <div class="week-row total-row">
+                                <span class="week-label">Total:</span>
+                                <span class="week-value">${emp.total} hrs</span>
+                            </div>
+                        </div>
                     </div>
                 `).join('')}
             </div>
