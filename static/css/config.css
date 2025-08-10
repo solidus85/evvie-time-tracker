@@ -1,0 +1,12 @@
+/* Configuration and settings sections */
+.config-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.config-section h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
