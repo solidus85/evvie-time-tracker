@@ -59,3 +59,4 @@ local_config.py
 .env
 
 *.csv
+CLAUDE_NOTEPAD.txt
