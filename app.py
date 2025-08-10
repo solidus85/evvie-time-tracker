@@ -30,6 +30,10 @@ def create_app():
     def health():
         return jsonify({'status': 'healthy'})
     
+    @app.route('/favicon.ico')
+    def favicon():
+        return '', 204
+    
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({'error': 'Not found'}), 404

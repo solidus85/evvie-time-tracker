@@ -113,12 +113,22 @@ class Database:
             return cursor
     
     def fetchone(self, query, params=None):
-        cursor = self.execute(query, params)
-        return cursor.fetchone()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            return cursor.fetchone()
     
     def fetchall(self, query, params=None):
-        cursor = self.execute(query, params)
-        return cursor.fetchall()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            return cursor.fetchall()
     
     def insert(self, query, params=None):
         with self.get_connection() as conn:
