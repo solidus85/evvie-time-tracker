@@ -31,7 +31,10 @@ class PDFBudgetParser:
         }
         
         # Extract client name and PMI
-        client_match = re.search(r'Client Name:\s*([^\n]+)', text)
+        client_match = re.search(r'Client Name:\s*([^\n]+?)(?:\s+PMI:|\s*$)', text)
+        if not client_match:
+            # Try alternate pattern
+            client_match = re.search(r'Client Name:\s*([^\n]+)', text)
         pmi_match = re.search(r'PMI:\s*(\d+)', text)
         
         if client_match:
@@ -127,17 +130,33 @@ class PDFBudgetParser:
         
         # Extract individual employee spending
         # Pattern to match employee entries with their rates and hours
-        employee_pattern = r'([A-Za-z]+),\s*([A-Za-z\s\.]+)\s+\d+/\d+/\d+\s*-\s*\d+/\d+/\d+\s*\$?([\d.]+)\s*([\d.]+)\s*\$?([\d,]+\.?\d*)'
+        # More specific pattern that captures the date ranges and validates the structure
+        employee_pattern = r'([A-Za-z]+),\s*([A-Za-z]+(?:\s+[A-Za-z\.]+)?)\s+(\d{1,2}/\d{1,2}/\d{2})\s*-\s*(\d{1,2}/\d{1,2}/\d{2})\s*\$?([\d.]+)\s+([\d.]+)\s*\$?([\d,]+\.?\d*)'
         
         employees = {}
         for match in re.finditer(employee_pattern, text):
             last_name = match.group(1).strip()
             first_name = match.group(2).strip()
-            rate = float(match.group(3))
-            hours = float(match.group(4))
-            amount = float(match.group(5).replace(',', ''))
+            # Skip the dates (groups 3 and 4) - we don't need them but they help validate the pattern
+            rate = float(match.group(5))
+            hours = float(match.group(6))
+            amount = float(match.group(7).replace(',', ''))
             
             emp_name = f"{last_name}, {first_name}"
+            
+            # Filter out false positives
+            # Skip if the name contains report-related keywords
+            if any(word in emp_name.lower() for word in ['report', 'spending', 'total', 'summary']):
+                continue
+            
+            # Skip if this matches the client name (to avoid the client being counted as an employee)
+            if emp_name == data["report_info"].get("client_name"):
+                continue
+            
+            # Skip if hours or rate seem unreasonable (likely parsing errors)
+            if hours > 200 or rate > 100 or rate < 10:
+                continue
+            
             if emp_name not in employees:
                 employees[emp_name] = {
                     "total_hours": 0,
