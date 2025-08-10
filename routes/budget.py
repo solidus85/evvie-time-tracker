@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify, current_app
 from services.budget_service import BudgetService
+from services.pdf_budget_parser import PDFBudgetParser
 from datetime import datetime
+import os
+import tempfile
 
 bp = Blueprint('budget', __name__)
 
@@ -193,5 +196,87 @@ def import_budgets():
         result = service.import_budgets_csv(file)
         
         return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# PDF Budget Report Endpoints
+@bp.route('/upload-report', methods=['POST'])
+def upload_budget_report():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not file.filename.endswith('.pdf'):
+            return jsonify({'error': 'Only PDF files are supported'}), 400
+        
+        # Save file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            file.save(tmp_file.name)
+            temp_path = tmp_file.name
+        
+        try:
+            # Parse the PDF
+            parser = PDFBudgetParser(current_app.db)
+            report_data = parser.parse_spending_report(temp_path)
+            
+            # Save to database
+            report_id = parser.save_budget_report(report_data, file.filename)
+            
+            # Clean up temp file
+            os.unlink(temp_path)
+            
+            return jsonify({
+                'success': True,
+                'report_id': report_id,
+                'summary': {
+                    'client': report_data['report_info'].get('client_name', 'Unknown'),
+                    'total_budget': report_data['budget_summary'].get('total_budgeted', 0),
+                    'total_spent': report_data['budget_summary'].get('total_spent', 0),
+                    'utilization': report_data['budget_summary'].get('utilization_percentage', 0)
+                }
+            })
+        finally:
+            # Ensure temp file is deleted
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+                
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/reports', methods=['GET'])
+def get_budget_reports():
+    try:
+        parser = PDFBudgetParser(current_app.db)
+        child_id = request.args.get('child_id', type=int)
+        
+        reports = parser.get_budget_reports(child_id)
+        
+        # Convert Row objects to dicts and handle JSON data
+        report_list = []
+        for report in reports:
+            report_dict = dict(report)
+            if report_dict.get('report_data'):
+                import json
+                report_dict['report_data'] = json.loads(report_dict['report_data'])
+            report_list.append(report_dict)
+        
+        return jsonify(report_list)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/reports/<int:report_id>', methods=['GET'])
+def get_budget_report(report_id):
+    try:
+        parser = PDFBudgetParser(current_app.db)
+        report = parser.get_report_by_id(report_id)
+        
+        if not report:
+            return jsonify({'error': 'Report not found'}), 404
+        
+        return jsonify(dict(report))
     except Exception as e:
         return jsonify({'error': str(e)}), 500

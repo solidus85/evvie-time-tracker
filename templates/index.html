@@ -140,6 +140,7 @@
                     <button class="tab-btn" data-tab="employee-rates">Employee Rates</button>
                     <button class="tab-btn" data-tab="allocations">Allocations</button>
                     <button class="tab-btn" data-tab="utilization">Utilization</button>
+                    <button class="tab-btn" data-tab="reports">Budget Reports</button>
                 </div>
                 <div id="child-budgets-tab" class="tab-content active">
                     <div class="budget-controls">
@@ -200,6 +201,30 @@
                 </div>
                 <div id="utilization-tab" class="tab-content">
                     <div class="utilization-dashboard"></div>
+                </div>
+                <div id="reports-tab" class="tab-content">
+                    <div class="reports-controls">
+                        <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
+                        <input type="file" id="pdf-report-file" accept=".pdf" style="display: none;">
+                        <button id="refresh-reports" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="report-upload-result" class="upload-result" style="display: none;"></div>
+                    <h3>Report History</h3>
+                    <table id="reports-table">
+                        <thead>
+                            <tr>
+                                <th>Report Date</th>
+                                <th>Child</th>
+                                <th>Period</th>
+                                <th>Total Budget</th>
+                                <th>Total Spent</th>
+                                <th>Utilization</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="report-details" class="report-details" style="display: none;"></div>
                 </div>
             </div>
 

@@ -136,3 +136,67 @@
     font-size: 14px;
     color: #666;
 }
+
+/* Budget Reports styles */
+.reports-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.upload-result {
+    margin: 20px 0;
+}
+
+.upload-result > div {
+    margin-bottom: 20px;
+}
+
+.report-details {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.report-detail-card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.report-detail-card h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+.report-detail-card p {
+    margin: 8px 0;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.detail-table th {
+    background: #ecf0f1;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.detail-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-table tr:hover {
+    background: #f8f9fa;
+}

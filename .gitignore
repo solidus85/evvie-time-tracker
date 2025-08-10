@@ -61,3 +61,4 @@ local_config.py
 *.csv
 CLAUDE_NOTEPAD.txt
 screenshot*
+*.pdf

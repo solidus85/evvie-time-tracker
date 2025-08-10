@@ -151,6 +151,22 @@ class Database:
                     FOREIGN KEY (period_id) REFERENCES payroll_periods(id),
                     UNIQUE(child_id, employee_id, period_id)
                 );
+                
+                CREATE TABLE IF NOT EXISTS budget_reports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    child_id INTEGER,
+                    report_date DATE NOT NULL,
+                    period_start DATE NOT NULL,
+                    period_end DATE NOT NULL,
+                    total_budgeted REAL,
+                    total_spent REAL,
+                    remaining_balance REAL,
+                    utilization_percent REAL,
+                    report_data JSON,
+                    pdf_filename TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (child_id) REFERENCES children(id)
+                );
             ''')
             
             # Migration: add time fields to exclusion_periods if needed
