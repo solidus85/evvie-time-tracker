@@ -161,7 +161,12 @@ class App {
                 
                 const startTime = this.formatTime(shift.start_time);
                 const endTime = this.formatTime(shift.end_time);
-                shiftDiv.textContent = `${startTime}-${endTime} ${shift.employee_name}/${shift.child_name}`;
+                const hours = this.calculateShiftHours(shift.start_time, shift.end_time);
+                
+                shiftDiv.innerHTML = `
+                    <div class="shift-time">${startTime}-${endTime} (${hours}h)</div>
+                    <div class="shift-employee">${shift.employee_name}</div>
+                `;
                 shiftDiv.onclick = () => this.showShiftDetails(shift);
                 dayDiv.appendChild(shiftDiv);
             });
@@ -351,6 +356,36 @@ class App {
         const ampm = h >= 12 ? 'PM' : 'AM';
         const h12 = h % 12 || 12;
         return `${h12}:${minutes}${ampm}`;
+    }
+    
+    calculateShiftHours(startTimeStr, endTimeStr) {
+        // Handle special case of 23:59:59 (end of day)
+        if (endTimeStr === '23:59:59') {
+            endTimeStr = '24:00:00';
+        }
+        
+        const [startHours, startMinutes, startSeconds] = startTimeStr.split(':').map(Number);
+        const [endHours, endMinutes, endSeconds] = endTimeStr.split(':').map(Number);
+        
+        const startTotalMinutes = startHours * 60 + startMinutes + startSeconds / 60;
+        let endTotalMinutes = endHours * 60 + endMinutes + endSeconds / 60;
+        
+        // Handle case where end time appears before start time (shouldn't happen with our validation)
+        if (endTotalMinutes < startTotalMinutes) {
+            endTotalMinutes += 24 * 60; // Add 24 hours
+        }
+        
+        const totalMinutes = endTotalMinutes - startTotalMinutes;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = Math.round(totalMinutes % 60);
+        
+        if (minutes === 0) {
+            return hours.toString();
+        } else if (minutes === 30) {
+            return `${hours}.5`;
+        } else {
+            return `${hours}:${minutes.toString().padStart(2, '0')}`;
+        }
     }
 }
 

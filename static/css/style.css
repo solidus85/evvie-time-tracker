@@ -127,11 +127,12 @@ nav {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 1px;
     background: #ddd;
     border: 1px solid #ddd;
     margin-bottom: 20px;
+    width: 100%;
 }
 
 .calendar-header {
@@ -175,14 +176,24 @@ nav {
 
 .shift-entry {
     background: #e8f4f8;
-    padding: 2px 4px;
-    margin: 2px 0;
+    padding: 4px 6px;
+    margin: 3px 0;
     border-radius: 3px;
     font-size: 11px;
     cursor: pointer;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.shift-entry .shift-time {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.shift-entry .shift-employee {
+    color: #7f8c8d;
+    font-size: 10px;
 }
 
 .shift-entry.imported {
