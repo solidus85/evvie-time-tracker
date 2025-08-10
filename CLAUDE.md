@@ -1,7 +1,8 @@
 # Evvie Time Tracker - Development Notes
 
 ## Important Rules
-- Commit all changes to the git repository only when explicitly requested by user
+- **ALWAYS COMMIT CHANGES** when completing a feature or set of related changes - DO NOT wait for explicit request
+- Commit all changes to the git repository after implementing features
 - Keep files under 400 lines total
 - Do not create scripts or md files without explicit direction or permission
 
