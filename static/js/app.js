@@ -98,8 +98,8 @@ class App {
             grid.appendChild(header);
         });
         
-        const startDate = new Date(period.start_date);
-        const endDate = new Date(period.end_date);
+        const startDate = new Date(period.start_date + 'T00:00:00');
+        const endDate = new Date(period.end_date + 'T00:00:00');
         
         const firstDayOfWeek = startDate.getDay();
         for (let i = 0; i < firstDayOfWeek; i++) {
@@ -290,7 +290,7 @@ class App {
     }
 
     formatDate(dateStr) {
-        return new Date(dateStr).toLocaleDateString();
+        return new Date(dateStr + 'T00:00:00').toLocaleDateString();
     }
 
     formatTime(timeStr) {
