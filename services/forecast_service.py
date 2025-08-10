@@ -49,16 +49,18 @@ class ForecastService:
         # Calculate weekly available (sustainable weekly rate)
         weekly_available = avg_daily * 7
         
-        # Calculate hours already scheduled for current week
-        # Find start of current week (assuming week starts on Sunday)
-        days_since_sunday = today.weekday()
-        if days_since_sunday == 6:  # Sunday is 6 in weekday()
+        # Calculate hours already scheduled for current PAYROLL week (Thursday-Wednesday)
+        # Find start of current payroll week
+        days_since_thursday = (today.weekday() - 3) % 7  # Thursday is 3
+        if days_since_thursday == 0:
+            # Today is Thursday, week starts today
             week_start = today
         else:
-            week_start = today - timedelta(days=days_since_sunday + 1)
+            # Go back to most recent Thursday
+            week_start = today - timedelta(days=days_since_thursday)
         week_end = week_start + timedelta(days=6)
         
-        # Get hours already scheduled this week
+        # Get hours already scheduled this payroll week
         current_week_hours = self.db.fetchone(
             """SELECT SUM((julianday(date || ' ' || end_time) - 
                           julianday(date || ' ' || start_time)) * 24) as total_hours
@@ -74,10 +76,16 @@ class ForecastService:
         end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
         days_remaining_display = max(0, (end_date - today).days + 1)
         
+        # Include budget period dates if available
+        budget_period_start = budget['period_start'] if budget else period_start
+        budget_period_end = budget['period_end'] if budget else period_end
+        
         return {
             'child_id': child_id,
             'period_start': period_start,
             'period_end': period_end,
+            'budget_period_start': budget_period_start,
+            'budget_period_end': budget_period_end,
             'budget_hours': utilization['budget_hours'],
             'used_hours': utilization['actual_hours'],
             'available_hours': available_hours,

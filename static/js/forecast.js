@@ -136,6 +136,13 @@ App.prototype.loadAvailableHours = async function() {
                         <div class="hours-card ${utilizationClass}">
                             <h4>${child.child_name}</h4>
                             <div class="hours-metrics">
+                                ${child.budget_period_start ? `
+                                <div class="metric-row" style="font-size: 12px; color: #666; border-bottom: 2px solid #ddd; margin-bottom: 5px;">
+                                    <span style="display: block; text-align: center; width: 100%;">
+                                        Budget Period: ${this.formatDateWithYear(child.budget_period_start)} - ${this.formatDateWithYear(child.budget_period_end)}
+                                    </span>
+                                </div>
+                                ` : ''}
                                 <div class="metric-row">
                                     <span class="label">Budget:</span>
                                     <span class="value">${this.formatHoursWithCommas(child.budget_hours)} hrs</span>
@@ -165,7 +172,7 @@ App.prototype.loadAvailableHours = async function() {
                                 <div class="metric-row">
                                     <span class="label">Week Remaining:</span>
                                     <span class="value ${child.weekly_remaining < 5 ? 'negative' : ''}">
-                                        ${this.formatDailyAverage(child.weekly_remaining || 0)} hrs
+                                        ${this.formatHoursWithCommas(child.weekly_remaining || 0)} hrs
                                     </span>
                                 </div>
                             </div>
