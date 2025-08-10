@@ -1,0 +1,1 @@
+- Commit all changes to the git repository.  Keep files under 400 lines total.  Do not create scripts or md files without explicit direction or permission.

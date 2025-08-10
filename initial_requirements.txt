@@ -1,0 +1,47 @@
+Title: Local Time Management System — Architecture & Requirements Plan
+
+Role: Act as a senior software architect + product lead. You are designing a local-only web app with a Python backend, SQLite database, and HTML/JS frontend. No authentication. Focus on correctness, simplicity, and maintainability.
+
+Goal: Produce an actionable plan (scope + technical architecture + schema + validations) for a local time management system that visualizes biweekly payroll periods, supports CSV imports from an external system (source of truth), and prevents invalid or overlapping shifts.
+
+Hard requirements (non-negotiable; restate and honor):
+- Stack: SQLite (DB), Python (backend), HTML/JS (frontend). Web front end with Python backend. Local-only; no authentication.
+- Dashboard: a 2-week payroll period shown like an Outlook-style calendar.
+  - Calendar shows rows/entries representing shifts worked by employees.
+  - Each day cell has a “+” button to add a shift on that day.
+  - Start and end of the first payroll period must be configurable (anchor); once set, the app automatically creates subsequent 14-day periods.
+- Shift model:
+  - Every shift MUST have both an Employee and a Child.
+  - Shifts CANNOT span multiple days; start and end must be on the same calendar date.
+  - No manual entry may overlap an existing shift by Employee OR by Child. (Enforce on create/update.)
+- CSV import:
+  - App must import CSV files produced by an external time tracking program (sample file name: `timesheet_sample.csv`).
+  - External payroll system is the source of truth. Imported shifts are authoritative and LOCKED (non-deletable/non-editable in this app).
+  - The app must handle multiple imports of the same/similar CSV and de-duplicate so existing shifts aren’t duplicated; do not create conflicts.
+- Deletion rule: Users can delete app-created (manual) shifts but NOT imported shifts.
+- Employees: Create/list/update Employees with fields:
+  - Friendly Name (for display)
+  - System Name (exactly matches values used in `timesheet_sample.csv`)
+- Limits & alerts:
+  - Configurable hour limits per (Worker/Employee, Child) pair.
+  - The app must alert when limits are exceeded (or would be exceeded) by a new/edit shift or by an import.
+- Exclusion shifts/periods:
+  - Define exclusion periods during which NEW user-created shifts are not allowed.
+  - Exclusion periods CAN span multiple days; shifts CANNOT.
+- Exports:
+  - Generate PDF reports to aid manual entry into the external system (local generation).
+- Local-first: runs on a single machine; keep setup simple; no cloud dependencies.
+
+Assumptions to state if unspecified:
+- Timezone handling (assume a single local timezone; note DST implications).
+- CSV column names and formats (infer from sample if provided; otherwise propose a reasonable schema).
+- Calendar start-of-week, work hours display, and locale formatting.
+- File size limits and error handling behavior.
+
+Guardrails & preferences:
+- Favor simplicity and transparency over frameworks: Python (Flask or FastAPI), SQLite, HTML/JS. No auth. Localhost-only by default.
+- Data is exportable (CSV/JSON). No lock‑in. Keep naming consistent with CSV System Name mapping.
+- Avoid over-engineering—this is an accessory to an external payroll system.
+
+If `timesheet_sample.csv` contents are provided, infer exact mappings; otherwise propose a sane default schema and call out assumptions.
+Start now.
