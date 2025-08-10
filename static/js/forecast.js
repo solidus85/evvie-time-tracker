@@ -272,11 +272,11 @@ App.prototype.generateProjection = async function() {
                     </div>
                     <div class="projection-metric">
                         <span class="label">Projected Hours:</span>
-                        <span class="value">${projection.projected_hours} hrs</span>
+                        <span class="value">${this.formatHoursWithCommas(projection.projected_hours)} hrs</span>
                     </div>
                     <div class="projection-metric">
                         <span class="label">Weekly Average:</span>
-                        <span class="value">${projection.weekly_projection} hrs/week</span>
+                        <span class="value">${this.formatHoursWithCommas(projection.weekly_projection)} hrs/week</span>
                     </div>
                     <div class="projection-metric">
                         <span class="label">Confidence:</span>
@@ -294,16 +294,16 @@ App.prototype.generateProjection = async function() {
                         <div class="comparison-metrics">
                             <div class="comparison-metric">
                                 <span class="label">Current Budget:</span>
-                                <span class="value">${projection.budget_comparison.current_budget.toFixed(2)} hrs</span>
+                                <span class="value">${this.formatHoursWithCommas(projection.budget_comparison.current_budget)} hrs</span>
                             </div>
                             <div class="comparison-metric">
                                 <span class="label">Projected Need:</span>
-                                <span class="value">${projection.budget_comparison.projected_need.toFixed(2)} hrs</span>
+                                <span class="value">${this.formatHoursWithCommas(projection.budget_comparison.projected_need)} hrs</span>
                             </div>
                             <div class="comparison-metric">
                                 <span class="label">Variance:</span>
                                 <span class="value ${projection.budget_comparison.variance < 0 ? 'negative' : 'positive'}">
-                                    ${projection.budget_comparison.variance > 0 ? '+' : ''}${projection.budget_comparison.variance.toFixed(2)} hrs
+                                    ${projection.budget_comparison.variance > 0 ? '+' : '-'}${this.formatHoursWithCommas(Math.abs(projection.budget_comparison.variance))} hrs
                                 </span>
                             </div>
                             <div class="comparison-metric">
