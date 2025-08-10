@@ -22,8 +22,8 @@ class App {
             });
         });
 
-        document.getElementById('prev-period').addEventListener('click', () => this.navigatePeriod(-1));
-        document.getElementById('next-period').addEventListener('click', () => this.navigatePeriod(1));
+        document.getElementById('prev-period').addEventListener('click', () => this.navigatePeriod(1));
+        document.getElementById('next-period').addEventListener('click', () => this.navigatePeriod(-1));
         
         document.getElementById('add-employee').addEventListener('click', () => this.showEmployeeForm());
         document.getElementById('add-child').addEventListener('click', () => this.showChildForm());
