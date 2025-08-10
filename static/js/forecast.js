@@ -158,6 +158,16 @@ App.prototype.loadAvailableHours = async function() {
                                     <span class="label">Daily Average:</span>
                                     <span class="value">${this.formatDailyAverage(child.average_daily_available)} hrs/day</span>
                                 </div>
+                                <div class="metric-row">
+                                    <span class="label">Weekly Available:</span>
+                                    <span class="value">${this.formatDailyAverage(child.weekly_available || 0)} hrs/week</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="label">Week Remaining:</span>
+                                    <span class="value ${child.weekly_remaining < 5 ? 'negative' : ''}">
+                                        ${this.formatDailyAverage(child.weekly_remaining || 0)} hrs
+                                    </span>
+                                </div>
                             </div>
                             <div class="utilization-bar">
                                 <div class="utilization-fill" style="width: ${Math.min(child.utilization_percent || 0, 100)}%"></div>

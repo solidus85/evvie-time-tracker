@@ -23,30 +23,56 @@ class ForecastService:
                 'used_hours': 0,
                 'available_hours': 0,
                 'days_remaining': 0,
-                'average_daily_available': 0
+                'average_daily_available': 0,
+                'weekly_available': 0,
+                'weekly_remaining': 0
             }
         
-        # Calculate days remaining in the selected period (for display)
         today = date.today()
-        end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
-        days_remaining = max(0, (end_date - today).days + 1)
+        available_hours = utilization['hours_remaining']
         
-        # Get the actual budget period for daily average calculation
+        # Get the actual budget period for calculations
         budget = self.budget_service.get_budget_for_period(child_id, period_start, period_end)
         if budget:
-            # Calculate total days in the BUDGET period (not the selected period)
-            budget_start_date = datetime.strptime(budget['period_start'], '%Y-%m-%d').date()
             budget_end_date = datetime.strptime(budget['period_end'], '%Y-%m-%d').date()
-            total_budget_days = (budget_end_date - budget_start_date).days + 1
+            # Days remaining in the BUDGET period (not selected period)
+            days_remaining_in_budget = max(0, (budget_end_date - today).days + 1)
             
-            # Daily average should be based on total budget period
-            available_hours = utilization['hours_remaining']
-            avg_daily = available_hours / total_budget_days if total_budget_days > 0 else 0
+            # Daily average based on remaining days in budget period
+            avg_daily = available_hours / days_remaining_in_budget if days_remaining_in_budget > 0 else 0
         else:
             # Fallback to selected period if no budget found
-            available_hours = utilization['hours_remaining']
-            total_days = (end_date - datetime.strptime(period_start, '%Y-%m-%d').date()).days + 1
-            avg_daily = available_hours / total_days if total_days > 0 else 0
+            end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
+            days_remaining_in_budget = max(0, (end_date - today).days + 1)
+            avg_daily = available_hours / days_remaining_in_budget if days_remaining_in_budget > 0 else 0
+        
+        # Calculate weekly available (sustainable weekly rate)
+        weekly_available = avg_daily * 7
+        
+        # Calculate hours already scheduled for current week
+        # Find start of current week (assuming week starts on Sunday)
+        days_since_sunday = today.weekday()
+        if days_since_sunday == 6:  # Sunday is 6 in weekday()
+            week_start = today
+        else:
+            week_start = today - timedelta(days=days_since_sunday + 1)
+        week_end = week_start + timedelta(days=6)
+        
+        # Get hours already scheduled this week
+        current_week_hours = self.db.fetchone(
+            """SELECT SUM((julianday(date || ' ' || end_time) - 
+                          julianday(date || ' ' || start_time)) * 24) as total_hours
+               FROM shifts
+               WHERE child_id = ? AND date >= ? AND date <= ?""",
+            (child_id, week_start.isoformat(), week_end.isoformat())
+        )
+        
+        hours_used_this_week = current_week_hours['total_hours'] if current_week_hours and current_week_hours['total_hours'] else 0
+        weekly_remaining = max(0, weekly_available - hours_used_this_week)
+        
+        # Days remaining in selected period (for display purposes)
+        end_date = datetime.strptime(period_end, '%Y-%m-%d').date()
+        days_remaining_display = max(0, (end_date - today).days + 1)
         
         return {
             'child_id': child_id,
@@ -55,8 +81,10 @@ class ForecastService:
             'budget_hours': utilization['budget_hours'],
             'used_hours': utilization['actual_hours'],
             'available_hours': available_hours,
-            'days_remaining': days_remaining,
+            'days_remaining': days_remaining_display,
             'average_daily_available': round(avg_daily, 2),
+            'weekly_available': round(weekly_available, 2),
+            'weekly_remaining': round(weekly_remaining, 2),
             'utilization_percent': utilization['utilization_percent']
         }
     
