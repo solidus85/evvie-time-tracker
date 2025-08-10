@@ -15,6 +15,8 @@
                 <button id="btn-exclusions" class="nav-btn">Exclusions</button>
                 <button id="btn-employees" class="nav-btn">Employees</button>
                 <button id="btn-children" class="nav-btn">Children</button>
+                <button id="btn-budget" class="nav-btn">Budget</button>
+                <button id="btn-forecast" class="nav-btn">Forecast</button>
                 <button id="btn-import" class="nav-btn">Import CSV</button>
                 <button id="btn-export" class="nav-btn">Export</button>
                 <button id="btn-config" class="nav-btn">Settings</button>
@@ -131,6 +133,131 @@
                 </div>
             </div>
 
+            <div id="budget-view" class="view">
+                <h2>Budget Management</h2>
+                <div class="budget-tabs">
+                    <button class="tab-btn active" data-tab="child-budgets">Child Budgets</button>
+                    <button class="tab-btn" data-tab="employee-rates">Employee Rates</button>
+                    <button class="tab-btn" data-tab="allocations">Allocations</button>
+                    <button class="tab-btn" data-tab="utilization">Utilization</button>
+                </div>
+                <div id="child-budgets-tab" class="tab-content active">
+                    <div class="budget-controls">
+                        <button id="add-budget" class="btn-primary">Add Budget</button>
+                        <button id="import-budgets" class="btn-primary">Import CSV</button>
+                        <input type="file" id="budget-csv-file" accept=".csv" style="display: none;">
+                    </div>
+                    <table id="budgets-table">
+                        <thead>
+                            <tr>
+                                <th>Child</th>
+                                <th>Period Start</th>
+                                <th>Period End</th>
+                                <th>Budget Hours</th>
+                                <th>Budget Amount</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="employee-rates-tab" class="tab-content">
+                    <button id="add-rate" class="btn-primary">Add Rate</button>
+                    <table id="rates-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Hourly Rate</th>
+                                <th>Effective Date</th>
+                                <th>End Date</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="allocations-tab" class="tab-content">
+                    <div class="allocation-controls">
+                        <label>Period:
+                            <select id="allocation-period"></select>
+                        </label>
+                        <button id="add-allocation" class="btn-primary">Add Allocation</button>
+                    </div>
+                    <table id="allocations-table">
+                        <thead>
+                            <tr>
+                                <th>Child</th>
+                                <th>Employee</th>
+                                <th>Allocated Hours</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="utilization-tab" class="tab-content">
+                    <div class="utilization-dashboard"></div>
+                </div>
+            </div>
+
+            <div id="forecast-view" class="view">
+                <h2>Hour Forecasting</h2>
+                <div class="forecast-tabs">
+                    <button class="tab-btn active" data-tab="available-hours">Available Hours</button>
+                    <button class="tab-btn" data-tab="patterns">Historical Patterns</button>
+                    <button class="tab-btn" data-tab="projections">Projections</button>
+                    <button class="tab-btn" data-tab="recommendations">Recommendations</button>
+                </div>
+                <div id="available-hours-tab" class="tab-content active">
+                    <div class="forecast-controls">
+                        <label>Period:
+                            <input type="date" id="forecast-start">
+                        </label>
+                        <label>to
+                            <input type="date" id="forecast-end">
+                        </label>
+                        <button id="refresh-forecast" class="btn-primary">Refresh</button>
+                    </div>
+                    <div id="available-hours-cards" class="forecast-cards"></div>
+                </div>
+                <div id="patterns-tab" class="tab-content">
+                    <div class="pattern-controls">
+                        <label>Child:
+                            <select id="pattern-child"></select>
+                        </label>
+                        <label>Lookback Days:
+                            <input type="number" id="lookback-days" value="90" min="7" max="365">
+                        </label>
+                        <button id="analyze-patterns" class="btn-primary">Analyze</button>
+                    </div>
+                    <div id="patterns-display"></div>
+                </div>
+                <div id="projections-tab" class="tab-content">
+                    <div class="projection-controls">
+                        <label>Child:
+                            <select id="projection-child"></select>
+                        </label>
+                        <label>Projection Days:
+                            <input type="number" id="projection-days" value="30" min="7" max="90">
+                        </label>
+                        <button id="generate-projection" class="btn-primary">Generate</button>
+                    </div>
+                    <div id="projections-display"></div>
+                </div>
+                <div id="recommendations-tab" class="tab-content">
+                    <div class="recommendation-controls">
+                        <label>Period:
+                            <select id="recommendation-period"></select>
+                        </label>
+                        <button id="generate-recommendations" class="btn-primary">Generate</button>
+                    </div>
+                    <div id="recommendations-display"></div>
+                </div>
+            </div>
+
             <div id="config-view" class="view">
                 <h2>Settings</h2>
                 <div class="config-section">
@@ -179,5 +306,7 @@
     <script src="/static/js/import-export.js"></script>
     <script src="/static/js/forms.js"></script>
     <script src="/static/js/config.js"></script>
+    <script src="/static/js/budget.js"></script>
+    <script src="/static/js/forecast.js"></script>
 </body>
 </html>

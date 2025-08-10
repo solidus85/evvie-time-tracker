@@ -110,6 +110,47 @@ class Database:
                     value TEXT NOT NULL,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+                
+                -- Budget tracking tables
+                CREATE TABLE IF NOT EXISTS child_budgets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    child_id INTEGER NOT NULL,
+                    period_start DATE NOT NULL,
+                    period_end DATE NOT NULL,
+                    budget_amount REAL,
+                    budget_hours REAL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (child_id) REFERENCES children(id),
+                    UNIQUE(child_id, period_start, period_end)
+                );
+                
+                CREATE TABLE IF NOT EXISTS employee_rates (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    employee_id INTEGER NOT NULL,
+                    hourly_rate REAL NOT NULL,
+                    effective_date DATE NOT NULL,
+                    end_date DATE,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (employee_id) REFERENCES employees(id)
+                );
+                
+                CREATE TABLE IF NOT EXISTS budget_allocations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    child_id INTEGER NOT NULL,
+                    employee_id INTEGER NOT NULL,
+                    period_id INTEGER NOT NULL,
+                    allocated_hours REAL NOT NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (child_id) REFERENCES children(id),
+                    FOREIGN KEY (employee_id) REFERENCES employees(id),
+                    FOREIGN KEY (period_id) REFERENCES payroll_periods(id),
+                    UNIQUE(child_id, employee_id, period_id)
+                );
             ''')
             
             # Migration: add time fields to exclusion_periods if needed
@@ -128,6 +169,14 @@ class Database:
                 cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN employee_id INTEGER REFERENCES employees(id)')
             if 'child_id' not in column_names:
                 cursor.execute('ALTER TABLE exclusion_periods ADD COLUMN child_id INTEGER REFERENCES children(id)')
+            
+            # Migration: add hourly_rate to employees if needed
+            cursor.execute("PRAGMA table_info(employees)")
+            columns = cursor.fetchall()
+            emp_column_names = [col[1] for col in columns]
+            
+            if 'hourly_rate' not in emp_column_names:
+                cursor.execute('ALTER TABLE employees ADD COLUMN hourly_rate REAL')
             
             # Migration: rename max_hours_per_period to max_hours_per_week if needed
             cursor.execute("PRAGMA table_info(hour_limits)")

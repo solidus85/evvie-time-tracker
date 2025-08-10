@@ -20,7 +20,7 @@ def create_app():
     db = Database(app.config['DATABASE'])
     app.db = db
     
-    from routes import employees, children, shifts, payroll, imports, exports, config
+    from routes import employees, children, shifts, payroll, imports, exports, config, budget, forecast
     
     app.register_blueprint(employees.bp, url_prefix='/api/employees')
     app.register_blueprint(children.bp, url_prefix='/api/children')
@@ -29,6 +29,8 @@ def create_app():
     app.register_blueprint(imports.bp, url_prefix='/api/import')
     app.register_blueprint(exports.bp, url_prefix='/api/export')
     app.register_blueprint(config.bp, url_prefix='/api/config')
+    app.register_blueprint(budget.bp, url_prefix='/api/budget')
+    app.register_blueprint(forecast.bp, url_prefix='/api/forecast')
     
     @app.route('/')
     def index():

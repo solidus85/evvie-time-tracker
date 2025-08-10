@@ -1,0 +1,328 @@
+/* Forecast management styles */
+
+/* Forecast controls */
+.forecast-controls, .pattern-controls, .projection-controls, .recommendation-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.forecast-controls label, 
+.pattern-controls label, 
+.projection-controls label,
+.recommendation-controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+}
+
+/* Available hours display */
+.forecast-summary {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #ecf0f1;
+    border-radius: 8px;
+}
+
+.forecast-summary h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.hours-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.hours-card {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    transition: all 0.3s;
+}
+
+.hours-card.low {
+    border-color: #2ecc71;
+}
+
+.hours-card.medium {
+    border-color: #f39c12;
+}
+
+.hours-card.high {
+    border-color: #e74c3c;
+}
+
+.hours-card h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.hours-metrics {
+    margin-bottom: 15px;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.metric-row .label {
+    color: #666;
+    font-size: 14px;
+}
+
+.metric-row .value {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.metric-row .value.negative {
+    color: #e74c3c;
+}
+
+/* Utilization bar */
+.utilization-bar {
+    position: relative;
+    background: #ecf0f1;
+    height: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.utilization-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    transition: width 0.3s;
+}
+
+.utilization-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Pattern analysis display */
+.patterns-results {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.patterns-results h3, .patterns-results h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.weekly-pattern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.day-pattern {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.day-name {
+    display: block;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.day-stats {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Employee distribution */
+.employee-distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.employee-stat {
+    display: grid;
+    grid-template-columns: 150px 1fr 100px;
+    align-items: center;
+    gap: 10px;
+}
+
+.emp-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.emp-bar {
+    background: #ecf0f1;
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.emp-fill {
+    height: 100%;
+    background: #3498db;
+}
+
+.emp-hours {
+    text-align: right;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Projection display */
+.projection-results {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.projection-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.projection-metric {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.projection-metric .label {
+    display: block;
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.projection-metric .value {
+    display: block;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.projection-metric .value.large {
+    font-size: 24px;
+    color: #3498db;
+}
+
+.confidence-high {
+    color: #2ecc71 !important;
+}
+
+.confidence-medium {
+    color: #f39c12 !important;
+}
+
+.confidence-low {
+    color: #e74c3c !important;
+}
+
+/* Budget comparison */
+.budget-comparison {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.comparison-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.comparison-metric {
+    text-align: center;
+}
+
+.comparison-metric .value.positive {
+    color: #2ecc71;
+}
+
+.comparison-metric .value.negative {
+    color: #e74c3c;
+}
+
+/* Recommendations display */
+.recommendations-results {
+    padding: 20px 0;
+}
+
+.recommendation-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recommendation-card h4 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.budget-info {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.status-ok {
+    color: #2ecc71;
+    margin-left: 10px;
+}
+
+.status-warning {
+    color: #f39c12;
+    margin-left: 10px;
+}
+
+.recommendation-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.recommendation-table th {
+    background: #ecf0f1;
+    padding: 8px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.recommendation-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.recommendation-table button {
+    padding: 4px 12px;
+    font-size: 12px;
+}

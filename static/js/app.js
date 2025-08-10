@@ -21,6 +21,8 @@ class App {
         document.getElementById('btn-exclusions').addEventListener('click', () => this.showView('exclusions'));
         document.getElementById('btn-employees').addEventListener('click', () => this.showView('employees'));
         document.getElementById('btn-children').addEventListener('click', () => this.showView('children'));
+        document.getElementById('btn-budget').addEventListener('click', () => this.showView('budget'));
+        document.getElementById('btn-forecast').addEventListener('click', () => this.showView('forecast'));
         document.getElementById('btn-import').addEventListener('click', () => this.showView('import'));
         document.getElementById('btn-export').addEventListener('click', () => this.showView('export'));
         document.getElementById('btn-config').addEventListener('click', () => this.showView('config'));
@@ -109,6 +111,8 @@ class App {
         else if (viewName === 'exclusions') this.loadExclusions();
         else if (viewName === 'employees') this.loadEmployees();
         else if (viewName === 'children') this.loadChildren();
+        else if (viewName === 'budget') this.loadBudget();
+        else if (viewName === 'forecast') this.loadForecast();
         else if (viewName === 'export') this.loadExportView();
         else if (viewName === 'config') this.loadConfig();
     }
