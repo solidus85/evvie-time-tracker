@@ -402,7 +402,10 @@ class App {
                 <td>${limit.child_name}</td>
                 <td>${limit.max_hours_per_week}</td>
                 <td>${limit.alert_threshold || 'N/A'}</td>
-                <td><button onclick="app.deleteHourLimit(${limit.id})">Delete</button></td>
+                <td>
+                    <button onclick="app.editHourLimit(${limit.id})" class="btn-primary">Edit</button>
+                    <button onclick="app.deleteHourLimit(${limit.id})" class="btn-secondary">Delete</button>
+                </td>
             </tr>
         `).join('');
         

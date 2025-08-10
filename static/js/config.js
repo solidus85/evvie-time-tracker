@@ -170,6 +170,71 @@ App.prototype.deleteShift = async function(id) {
     }
 };
 
+App.prototype.editHourLimit = async function(id) {
+    try {
+        // Fetch current hour limits to find the one to edit
+        const hourLimits = await this.api('/api/config/hour-limits');
+        const limit = hourLimits.find(l => l.id === id);
+        
+        if (!limit) {
+            this.showToast('Hour limit not found', 'error');
+            return;
+        }
+        
+        await this.loadInitialData();
+        const content = `
+            <h2>Edit Hour Limit</h2>
+            <form id="hour-limit-edit-form">
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select name="employee_id" disabled>
+                        <option value="${limit.employee_id}">${limit.employee_name}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Child</label>
+                    <select name="child_id" disabled>
+                        <option value="${limit.child_id}">${limit.child_name}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Max Hours per Week</label>
+                    <input type="number" name="max_hours_per_week" step="0.5" value="${limit.max_hours_per_week}" required>
+                </div>
+                <div class="form-group">
+                    <label>Alert Threshold (optional)</label>
+                    <input type="number" name="alert_threshold" step="0.5" value="${limit.alert_threshold || ''}">
+                </div>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+        `;
+        this.showModal(content);
+        
+        document.getElementById('hour-limit-edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                max_hours_per_week: parseFloat(formData.get('max_hours_per_week')),
+                alert_threshold: formData.get('alert_threshold') ? parseFloat(formData.get('alert_threshold')) : null
+            };
+            
+            try {
+                await this.api(`/api/config/hour-limits/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                this.showToast('Hour limit updated successfully');
+                this.closeModal();
+                this.loadConfig();
+            } catch (error) {
+                this.showToast(error.message, 'error');
+            }
+        });
+    } catch (error) {
+        this.showToast(error.message, 'error');
+    }
+};
+
 App.prototype.deleteHourLimit = async function(id) {
     if (!confirm('Are you sure you want to remove this hour limit?')) return;
     
