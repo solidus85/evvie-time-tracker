@@ -5,6 +5,7 @@ class App {
         this.periods = [];
         this.employees = [];
         this.children = [];
+        this.selectedChildId = null;
         this.init();
     }
 
@@ -39,6 +40,11 @@ class App {
         
         document.getElementById('configure-periods').addEventListener('click', () => this.configurePeriods());
         
+        document.getElementById('child-filter').addEventListener('change', (e) => {
+            this.selectedChildId = e.target.value ? parseInt(e.target.value) : null;
+            this.loadDashboard();
+        });
+        
         document.querySelector('.close').addEventListener('click', () => this.closeModal());
     }
 
@@ -53,6 +59,13 @@ class App {
             this.employees = employees;
             this.children = children;
             this.periods = periods;
+            
+            // Set default selected child to first in list
+            if (this.children.length > 0 && !this.selectedChildId) {
+                this.selectedChildId = this.children[0].id;
+            }
+            
+            this.populateChildDropdown();
             
             if (this.currentView === 'dashboard') {
                 await this.loadCurrentPeriod();
@@ -74,16 +87,27 @@ class App {
     }
 
     async loadDashboard() {
-        if (!this.currentPeriod) return;
+        if (!this.currentPeriod || !this.selectedChildId) return;
         
         document.getElementById('period-label').textContent = 
             `${this.formatDate(this.currentPeriod.start_date)} - ${this.formatDate(this.currentPeriod.end_date)}`;
         
-        const shifts = await this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}`);
+        const shifts = await this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}&child_id=${this.selectedChildId}`);
         this.renderCalendar(this.currentPeriod, shifts);
         
+        // Filter summary to only show selected child's data
         const summary = await this.api(`/api/payroll/periods/${this.currentPeriod.id}/summary`);
-        this.renderSummary(summary);
+        this.renderChildSummary(summary, this.selectedChildId);
+    }
+    
+    populateChildDropdown() {
+        const dropdown = document.getElementById('child-filter');
+        if (!dropdown) return;
+        
+        dropdown.innerHTML = this.children
+            .filter(c => c.active)
+            .map(child => `<option value="${child.id}" ${child.id === this.selectedChildId ? 'selected' : ''}>${child.name}</option>`)
+            .join('');
     }
 
     renderCalendar(period, shifts) {
@@ -167,6 +191,34 @@ class App {
                 <div class="summary-item">
                     <div class="label">Manual</div>
                     <div class="value">${summary.manual_shifts}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderChildSummary(summary, childId) {
+        const selectedChild = this.children.find(c => c.id === childId);
+        const childName = selectedChild ? selectedChild.name : 'Unknown';
+        
+        // Count shifts for selected child from the full summary
+        let childShifts = 0;
+        let childHours = 0;
+        
+        // Find child hours in the summary
+        for (const key in summary.child_hours) {
+            if (key.startsWith(`${childId}_`)) {
+                childHours = summary.child_hours[key];
+                break;
+            }
+        }
+        
+        const summaryDiv = document.getElementById('period-summary');
+        summaryDiv.innerHTML = `
+            <h3>Period Summary for ${childName}</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">Total Hours</div>
+                    <div class="value">${childHours || 0}</div>
                 </div>
             </div>
         `;
