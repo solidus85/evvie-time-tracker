@@ -33,6 +33,10 @@ class ImportService:
         end_time_str = end_match.group(1) if end_match else row['End Time']
         end_time = datetime.strptime(end_time_str, '%I:%M %p').strftime('%H:%M:%S')
         
+        # Handle special case where 12:00 AM means end of day
+        if end_time == '00:00:00':
+            end_time = '23:59:59'
+        
         return {
             'date': date,
             'child_name': child_name,
