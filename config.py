@@ -1,19 +1,19 @@
 import os
+import secrets
+
+def get_or_create_secret_key():
+    secret_key_file = os.environ.get('SECRET_KEY_FILE') or 'secret.key'
+    if os.path.exists(secret_key_file):
+        with open(secret_key_file, 'r') as f:
+            return f.read().strip()
+    else:
+        key = secrets.token_hex(32)
+        with open(secret_key_file, 'w') as f:
+            f.write(key)
+        return key
 
 class Config:
-    SECRET_KEY_FILE = os.environ.get('SECRET_KEY_FILE') or 'secret.key'
-    
-    @property
-    def SECRET_KEY(self):
-        if os.path.exists(self.SECRET_KEY_FILE):
-            with open(self.SECRET_KEY_FILE, 'r') as f:
-                return f.read().strip()
-        else:
-            import secrets
-            key = secrets.token_hex(32)
-            with open(self.SECRET_KEY_FILE, 'w') as f:
-                f.write(key)
-            return key
+    SECRET_KEY = get_or_create_secret_key()
     
     DATABASE = 'evvie_time_tracker.db'
     DEBUG = True
