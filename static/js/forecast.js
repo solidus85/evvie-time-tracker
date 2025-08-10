@@ -135,8 +135,13 @@ App.prototype.loadAvailableHours = async function() {
                     return `
                         <div class="hours-card ${utilizationClass}">
                             <h4>${child.child_name}</h4>
+                            ${child.budget_hours === 0 ? `
+                                <div style="font-size: 12px; color: #e74c3c; background: #ffe4e4; padding: 8px; margin: 10px 0; border-radius: 4px; text-align: center;">
+                                    No spending report data available
+                                </div>
+                            ` : ''}
                             <div class="hours-metrics">
-                                ${child.budget_period_start ? `
+                                ${child.budget_period_start && child.budget_hours > 0 ? `
                                 <div class="metric-row" style="font-size: 12px; color: #666; border-bottom: 2px solid #ddd; margin-bottom: 5px;">
                                     <span style="display: block; text-align: center; width: 100%;">
                                         Budget Period: ${this.formatDateWithYear(child.budget_period_start)} - ${this.formatDateWithYear(child.budget_period_end)}
@@ -158,16 +163,16 @@ App.prototype.loadAvailableHours = async function() {
                                     </span>
                                 </div>
                                 <div class="metric-row">
-                                    <span class="label">Days Remaining:</span>
+                                    <span class="label">Payroll Days Remaining:</span>
                                     <span class="value">${child.days_remaining}</span>
                                 </div>
                                 <div class="metric-row">
-                                    <span class="label">Daily Average:</span>
+                                    <span class="label">Daily Available:</span>
                                     <span class="value">${this.formatDailyAverage(child.average_daily_available)} hrs/day</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="label">Weekly Available:</span>
-                                    <span class="value">${this.formatDailyAverage(child.weekly_available || 0)} hrs/week</span>
+                                    <span class="value">${this.formatHoursWithCommas(child.weekly_available || 0)} hrs/week</span>
                                 </div>
                                 <div class="metric-row">
                                     <span class="label">Week Remaining:</span>
