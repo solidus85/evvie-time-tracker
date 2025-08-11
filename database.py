@@ -226,6 +226,67 @@ class Database:
                 # Drop old table and rename new one
                 cursor.execute('DROP TABLE hour_limits')
                 cursor.execute('ALTER TABLE hour_limits_new RENAME TO hour_limits')
+            
+            # Migration: Create budget tables if they don't exist
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='child_budgets'
+            """)
+            if not cursor.fetchone():
+                cursor.execute('''
+                    CREATE TABLE child_budgets (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        child_id INTEGER NOT NULL,
+                        period_start DATE NOT NULL,
+                        period_end DATE NOT NULL,
+                        budget_amount REAL,
+                        budget_hours REAL,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (child_id) REFERENCES children(id),
+                        UNIQUE(child_id, period_start, period_end)
+                    )
+                ''')
+            
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='employee_rates'
+            """)
+            if not cursor.fetchone():
+                cursor.execute('''
+                    CREATE TABLE employee_rates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER NOT NULL,
+                        hourly_rate REAL NOT NULL,
+                        effective_date DATE NOT NULL,
+                        end_date DATE,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (employee_id) REFERENCES employees(id)
+                    )
+                ''')
+            
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='budget_allocations'
+            """)
+            if not cursor.fetchone():
+                cursor.execute('''
+                    CREATE TABLE budget_allocations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        child_id INTEGER NOT NULL,
+                        employee_id INTEGER NOT NULL,
+                        period_id INTEGER NOT NULL,
+                        allocated_hours REAL NOT NULL,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (child_id) REFERENCES children(id),
+                        FOREIGN KEY (employee_id) REFERENCES employees(id),
+                        FOREIGN KEY (period_id) REFERENCES payroll_periods(id)
+                    )
+                ''')
     
     def execute(self, query, params=None):
         with self.get_connection() as conn:

@@ -134,29 +134,214 @@
             </div>
 
             <div id="budget-view" class="view">
-                <h2>Budget Reports</h2>
-                <div class="reports-controls">
-                    <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
-                    <input type="file" id="pdf-report-file" accept=".pdf" style="display: none;">
-                    <button id="refresh-reports" class="btn-secondary">Refresh</button>
+                <h2>Budget Management</h2>
+                <div class="budget-tabs">
+                    <button class="tab-btn active" data-tab="reports">PDF Reports</button>
+                    <button class="tab-btn" data-tab="budgets">Child Budgets</button>
+                    <button class="tab-btn" data-tab="rates">Employee Rates</button>
+                    <button class="tab-btn" data-tab="allocations">Allocations</button>
+                    <button class="tab-btn" data-tab="utilization">Utilization</button>
                 </div>
-                <div id="report-upload-result" class="upload-result" style="display: none;"></div>
-                <h3>Report History</h3>
-                <table id="reports-table">
-                    <thead>
-                        <tr>
-                            <th>Report Date</th>
-                            <th>Child</th>
-                            <th>Period</th>
-                            <th>Total Budget</th>
-                            <th>Total Spent</th>
-                            <th>Utilization</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div id="report-details" class="report-details" style="display: none;"></div>
+                
+                <!-- PDF Reports Tab -->
+                <div id="reports-tab" class="tab-content active">
+                    <div class="reports-controls">
+                        <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
+                        <input type="file" id="pdf-report-file" accept=".pdf" style="display: none;">
+                        <button id="refresh-reports" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="report-upload-result" class="upload-result" style="display: none;"></div>
+                    <h3>Report History</h3>
+                    <table id="reports-table">
+                        <thead>
+                            <tr>
+                                <th>Report Date</th>
+                                <th>Child</th>
+                                <th>Period</th>
+                                <th>Total Budget</th>
+                                <th>Total Spent</th>
+                                <th>Utilization</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="report-details" class="report-details" style="display: none;"></div>
+                </div>
+                
+                <!-- Child Budgets Tab -->
+                <div id="budgets-tab" class="tab-content">
+                    <div class="budget-controls">
+                        <button id="add-budget" class="btn-primary">Add Budget</button>
+                        <button id="import-budgets" class="btn-secondary">Import CSV</button>
+                        <input type="file" id="budget-csv-file" accept=".csv" style="display: none;">
+                        <button id="refresh-budgets" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="budget-form" class="form-container" style="display: none;">
+                        <h3>Add/Edit Child Budget</h3>
+                        <form id="child-budget-form">
+                            <input type="hidden" id="budget-id">
+                            <label>Child:
+                                <select id="budget-child" required></select>
+                            </label>
+                            <label>Period Start:
+                                <input type="date" id="budget-start" required>
+                            </label>
+                            <label>Period End:
+                                <input type="date" id="budget-end" required>
+                            </label>
+                            <label>Budget Amount ($):
+                                <input type="number" id="budget-amount" step="0.01" min="0" required>
+                            </label>
+                            <label>Budget Hours:
+                                <input type="number" id="budget-hours" step="0.01" min="0">
+                            </label>
+                            <label>Notes:
+                                <textarea id="budget-notes" rows="3"></textarea>
+                            </label>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-primary">Save</button>
+                                <button type="button" id="cancel-budget" class="btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <table id="budgets-table">
+                        <thead>
+                            <tr>
+                                <th>Child</th>
+                                <th>Period</th>
+                                <th>Budget Amount</th>
+                                <th>Budget Hours</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <!-- Employee Rates Tab -->
+                <div id="rates-tab" class="tab-content">
+                    <div class="rates-controls">
+                        <button id="add-rate" class="btn-primary">Add Rate</button>
+                        <button id="refresh-rates" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="rate-form" class="form-container" style="display: none;">
+                        <h3>Add/Edit Employee Rate</h3>
+                        <form id="employee-rate-form">
+                            <input type="hidden" id="rate-id">
+                            <label>Employee:
+                                <select id="rate-employee" required></select>
+                            </label>
+                            <label>Hourly Rate ($):
+                                <input type="number" id="rate-amount" step="0.01" min="0" required>
+                            </label>
+                            <label>Effective Date:
+                                <input type="date" id="rate-effective" required>
+                            </label>
+                            <label>End Date (optional):
+                                <input type="date" id="rate-end">
+                            </label>
+                            <label>Notes:
+                                <textarea id="rate-notes" rows="3"></textarea>
+                            </label>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-primary">Save</button>
+                                <button type="button" id="cancel-rate" class="btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <table id="rates-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Hourly Rate</th>
+                                <th>Effective Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <!-- Allocations Tab -->
+                <div id="allocations-tab" class="tab-content">
+                    <div class="allocation-controls">
+                        <label>Payroll Period:
+                            <select id="allocation-period"></select>
+                        </label>
+                        <button id="add-allocation" class="btn-primary">Add Allocation</button>
+                        <button id="refresh-allocations" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="allocation-form" class="form-container" style="display: none;">
+                        <h3>Add/Edit Budget Allocation</h3>
+                        <form id="budget-allocation-form">
+                            <input type="hidden" id="allocation-id">
+                            <label>Child:
+                                <select id="allocation-child" required></select>
+                            </label>
+                            <label>Employee:
+                                <select id="allocation-employee" required></select>
+                            </label>
+                            <label>Allocated Hours:
+                                <input type="number" id="allocation-hours" step="0.01" min="0" required>
+                            </label>
+                            <label>Notes:
+                                <textarea id="allocation-notes" rows="3"></textarea>
+                            </label>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-primary">Save</button>
+                                <button type="button" id="cancel-allocation" class="btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <table id="allocations-table">
+                        <thead>
+                            <tr>
+                                <th>Child</th>
+                                <th>Employee</th>
+                                <th>Allocated Hours</th>
+                                <th>Estimated Cost</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <!-- Utilization Tab -->
+                <div id="utilization-tab" class="tab-content">
+                    <div class="utilization-controls">
+                        <label>Period:
+                            <input type="date" id="util-start">
+                        </label>
+                        <label>to
+                            <input type="date" id="util-end">
+                        </label>
+                        <button id="refresh-utilization" class="btn-primary">Refresh</button>
+                    </div>
+                    <div id="utilization-dashboard">
+                        <div class="util-summary" id="util-summary"></div>
+                        <div class="util-charts" id="util-charts"></div>
+                        <table id="utilization-table">
+                            <thead>
+                                <tr>
+                                    <th>Child</th>
+                                    <th>Budget</th>
+                                    <th>Spent</th>
+                                    <th>Remaining</th>
+                                    <th>Utilization %</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div id="forecast-view" class="view">

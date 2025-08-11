@@ -1,6 +1,315 @@
 /* Budget management styles */
 
-/* Budget Reports styles */
+/* Tab navigation */
+.budget-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+}
+
+.budget-tabs .tab-btn {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.budget-tabs .tab-btn:hover {
+    color: #3498db;
+}
+
+.budget-tabs .tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Form containers */
+.form-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-container h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.form-container form {
+    display: grid;
+    gap: 15px;
+}
+
+.form-container label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-container input,
+.form-container select,
+.form-container textarea {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-container input:focus,
+.form-container select:focus,
+.form-container textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+/* Control sections */
+.budget-controls,
+.rates-controls,
+.allocation-controls,
+.utilization-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.allocation-controls label,
+.utilization-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.allocation-controls select,
+.utilization-controls input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Tables */
+#budgets-table,
+#rates-table,
+#allocations-table,
+#utilization-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#budgets-table thead,
+#rates-table thead,
+#allocations-table thead,
+#utilization-table thead {
+    background: #34495e;
+    color: white;
+}
+
+#budgets-table th,
+#rates-table th,
+#allocations-table th,
+#utilization-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 500;
+}
+
+#budgets-table td,
+#rates-table td,
+#allocations-table td,
+#utilization-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#budgets-table tbody tr:hover,
+#rates-table tbody tr:hover,
+#allocations-table tbody tr:hover,
+#utilization-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+#budgets-table tbody tr:last-child td,
+#rates-table tbody tr:last-child td,
+#allocations-table tbody tr:last-child td,
+#utilization-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Utilization Dashboard */
+.util-summary {
+    margin-bottom: 30px;
+}
+
+.util-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.util-card h3 {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    font-weight: 300;
+}
+
+.util-card p {
+    margin: 10px 0;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.util-card p:last-child {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Status indicators */
+#utilization-table td:last-child {
+    font-weight: 600;
+}
+
+#utilization-table tr td:last-child:contains("High") {
+    color: #e74c3c;
+}
+
+#utilization-table tr td:last-child:contains("Medium") {
+    color: #f39c12;
+}
+
+#utilization-table tr td:last-child:contains("Normal") {
+    color: #27ae60;
+}
+
+/* Button styles specific to budget module */
+#budget-view .btn-primary,
+#budget-view .btn-secondary {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+#budget-view .btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+#budget-view .btn-primary:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+#budget-view .btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+#budget-view .btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* Action buttons in tables */
+#budget-view table td:last-child {
+    white-space: nowrap;
+}
+
+#budget-view table td:last-child button {
+    margin-right: 5px;
+}
+
+#budget-view table td:last-child button:last-child {
+    margin-right: 0;
+}
+
+/* Empty state styling */
+#budget-view tbody tr td[colspan] {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .budget-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .budget-tabs .tab-btn {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+    
+    .budget-controls,
+    .rates-controls,
+    .allocation-controls,
+    .utilization-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #budget-view table {
+        font-size: 12px;
+    }
+    
+    #budget-view table th,
+    #budget-view table td {
+        padding: 8px;
+    }
+}
+
+/* Budget Reports styles (existing) */
 .reports-controls {
     display: flex;
     gap: 10px;
