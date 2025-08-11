@@ -14,7 +14,7 @@
     padding-bottom: 10px;
 }
 
-.tab-btn {
+.forecast-tabs .tab-btn {
     padding: 10px 20px;
     background: #ecf0f1;
     border: none;
@@ -26,21 +26,21 @@
     color: #2c3e50;
 }
 
-.tab-btn:hover {
+.forecast-tabs .tab-btn:hover {
     background: #bdc3c7;
 }
 
-.tab-btn.active {
+.forecast-tabs .tab-btn.active {
     background: #3498db;
     color: white;
 }
 
-.tab-content {
+#forecast-view .tab-content {
     display: none;
     animation: fadeIn 0.3s;
 }
 
-.tab-content.active {
+#forecast-view .tab-content.active {
     display: block;
 }
 
