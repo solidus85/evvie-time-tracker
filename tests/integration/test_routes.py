@@ -9,8 +9,8 @@ class TestEmployeeRoutes:
     """Test employee API endpoints"""
     
     def test_get_all_employees(self, client, sample_data):
-        """Test GET /api/employees"""
-        response = client.get('/api/employees')
+        """Test GET /api/employees/"""
+        response = client.get('/api/employees/')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert isinstance(data, list)
@@ -19,7 +19,7 @@ class TestEmployeeRoutes:
     
     def test_create_employee(self, client):
         """Test POST /api/employees"""
-        response = client.post('/api/employees', 
+        response = client.post('/api/employees/', 
             json={
                 'friendly_name': 'Test Employee',
                 'system_name': 'test.employee'
@@ -27,7 +27,7 @@ class TestEmployeeRoutes:
         assert response.status_code == 201
         data = json.loads(response.data)
         assert data['id'] is not None
-        assert data['message'] == 'Employee created successfully'
+        assert data['message'] == 'Employee created'
     
     def test_update_employee(self, client, sample_data):
         """Test PUT /api/employees/<id>"""
@@ -46,7 +46,7 @@ class TestEmployeeRoutes:
         assert response.status_code == 200
         
         # Verify deactivation
-        response = client.get('/api/employees')
+        response = client.get('/api/employees/')
         data = json.loads(response.data)
         employee = next((e for e in data if e['id'] == sample_data['employee'].id), None)
         assert employee['active'] == 0
@@ -62,7 +62,7 @@ class TestChildrenRoutes:
     
     def test_get_all_children(self, client, sample_data):
         """Test GET /api/children"""
-        response = client.get('/api/children')
+        response = client.get('/api/children/')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert isinstance(data, list)
@@ -70,7 +70,7 @@ class TestChildrenRoutes:
     
     def test_create_child(self, client):
         """Test POST /api/children"""
-        response = client.post('/api/children',
+        response = client.post('/api/children/',
             json={
                 'name': 'Test Child',
                 'code': 'TC001'
@@ -81,7 +81,7 @@ class TestChildrenRoutes:
     
     def test_create_child_duplicate_code(self, client, sample_data):
         """Test creating child with duplicate code"""
-        response = client.post('/api/children',
+        response = client.post('/api/children/',
             json={
                 'name': 'Another Child',
                 'code': sample_data['child'].code
@@ -96,7 +96,7 @@ class TestShiftRoutes:
     
     def test_create_shift(self, client, sample_data):
         """Test POST /api/shifts"""
-        response = client.post('/api/shifts',
+        response = client.post('/api/shifts/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -110,7 +110,7 @@ class TestShiftRoutes:
     
     def test_create_shift_invalid_times(self, client, sample_data):
         """Test creating shift with invalid times"""
-        response = client.post('/api/shifts',
+        response = client.post('/api/shifts/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -123,7 +123,7 @@ class TestShiftRoutes:
     def test_get_shifts_for_period(self, client, sample_data):
         """Test GET /api/shifts with date range"""
         # Create a shift first
-        client.post('/api/shifts',
+        client.post('/api/shifts/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -132,7 +132,7 @@ class TestShiftRoutes:
                 'end_time': '17:00:00'
             })
         
-        response = client.get('/api/shifts?start_date=2025-03-01&end_date=2025-03-31')
+        response = client.get('/api/shifts/?start_date=2025-03-01&end_date=2025-03-31')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert len(data) > 0
@@ -141,7 +141,7 @@ class TestShiftRoutes:
     def test_update_shift(self, client, sample_data):
         """Test PUT /api/shifts/<id>"""
         # Create a shift
-        create_response = client.post('/api/shifts',
+        create_response = client.post('/api/shifts/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -164,7 +164,7 @@ class TestShiftRoutes:
     def test_delete_shift(self, client, sample_data):
         """Test DELETE /api/shifts/<id>"""
         # Create a shift
-        create_response = client.post('/api/shifts',
+        create_response = client.post('/api/shifts/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -196,7 +196,7 @@ class TestPayrollRoutes:
     
     def test_create_exclusion_period(self, client, sample_data):
         """Test POST /api/payroll/exclusions"""
-        response = client.post('/api/payroll/exclusions',
+        response = client.post('/api/payroll/exclusions/',
             json={
                 'name': 'Test Exclusion',
                 'start_date': '2025-04-01',
@@ -210,7 +210,7 @@ class TestPayrollRoutes:
     
     def test_create_exclusion_xor_validation(self, client, sample_data):
         """Test exclusion XOR validation (employee OR child, not both)"""
-        response = client.post('/api/payroll/exclusions',
+        response = client.post('/api/payroll/exclusions/',
             json={
                 'name': 'Invalid Exclusion',
                 'start_date': '2025-04-01',
@@ -244,8 +244,10 @@ class TestImportExportRoutes:
         csv_content = f"""Date,Consumer,Employee,Start Time,End Time
 03/01/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].friendly_name},09:00 AM,05:00 PM"""
         
-        response = client.post('/api/imports/csv',
-            data={'file': (csv_content.encode('utf-8'), 'test.csv')},
+        from io import BytesIO
+        
+        response = client.post('/api/import/csv',
+            data={'file': (BytesIO(csv_content.encode('utf-8')), 'test.csv', 'text/csv')},
             content_type='multipart/form-data')
         
         assert response.status_code == 200
@@ -255,14 +257,14 @@ class TestImportExportRoutes:
     
     def test_csv_export(self, client):
         """Test GET /api/exports/csv"""
-        response = client.get('/api/exports/csv?start_date=2025-03-01&end_date=2025-03-31')
+        response = client.get('/api/export/csv?start_date=2025-03-01&end_date=2025-03-31')
         assert response.status_code == 200
         assert response.content_type == 'text/csv'
         assert b'Date,Child,Employee' in response.data
     
     def test_json_export(self, client):
         """Test GET /api/exports/json"""
-        response = client.get('/api/exports/json?start_date=2025-03-01&end_date=2025-03-31')
+        response = client.get('/api/export/json?start_date=2025-03-01&end_date=2025-03-31')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert 'shifts' in data
@@ -275,7 +277,7 @@ class TestBudgetRoutes:
     
     def test_create_child_budget(self, client, sample_data):
         """Test POST /api/budget/children"""
-        response = client.post('/api/budget/children',
+        response = client.post('/api/budget/children/',
             json={
                 'child_id': sample_data['child'].id,
                 'period_start': '2025-04-01',
@@ -290,14 +292,14 @@ class TestBudgetRoutes:
     
     def test_get_child_budgets(self, client):
         """Test GET /api/budget/children"""
-        response = client.get('/api/budget/children')
+        response = client.get('/api/budget/children/')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert isinstance(data, list)
     
     def test_create_employee_rate(self, client, sample_data):
         """Test POST /api/budget/rates"""
-        response = client.post('/api/budget/rates',
+        response = client.post('/api/budget/rates/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'hourly_rate': 25.00,
@@ -309,7 +311,7 @@ class TestBudgetRoutes:
     
     def test_get_utilization(self, client):
         """Test POST /api/budget/utilization"""
-        response = client.post('/api/budget/utilization',
+        response = client.post('/api/budget/utilization/',
             json={
                 'start_date': '2025-04-01',
                 'end_date': '2025-04-30'
@@ -326,7 +328,7 @@ class TestForecastRoutes:
     
     def test_get_available_hours(self, client, sample_data):
         """Test POST /api/forecast/available-hours"""
-        response = client.post('/api/forecast/available-hours',
+        response = client.post('/api/forecast/available-hours/',
             json={
                 'child_id': sample_data['child'].id,
                 'period_start': '2025-04-01',
@@ -340,7 +342,7 @@ class TestForecastRoutes:
     
     def test_get_patterns(self, client, sample_data):
         """Test POST /api/forecast/patterns"""
-        response = client.post('/api/forecast/patterns',
+        response = client.post('/api/forecast/patterns/',
             json={
                 'child_id': sample_data['child'].id,
                 'lookback_days': 90
@@ -352,7 +354,7 @@ class TestForecastRoutes:
     
     def test_generate_projection(self, client, sample_data):
         """Test POST /api/forecast/projection"""
-        response = client.post('/api/forecast/projection',
+        response = client.post('/api/forecast/projection/',
             json={
                 'child_id': sample_data['child'].id,
                 'days_ahead': 30
@@ -369,14 +371,14 @@ class TestConfigRoutes:
     
     def test_get_hour_limits(self, client):
         """Test GET /api/config/hour-limits"""
-        response = client.get('/api/config/hour-limits')
+        response = client.get('/api/config/hour-limits/')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert isinstance(data, list)
     
     def test_create_hour_limit(self, client, sample_data):
         """Test POST /api/config/hour-limits"""
-        response = client.post('/api/config/hour-limits',
+        response = client.post('/api/config/hour-limits/',
             json={
                 'employee_id': sample_data['employee'].id,
                 'child_id': sample_data['child'].id,
@@ -389,14 +391,14 @@ class TestConfigRoutes:
     
     def test_get_app_settings(self, client):
         """Test GET /api/config/settings"""
-        response = client.get('/api/config/settings')
+        response = client.get('/api/config/settings/')
         assert response.status_code == 200
         data = json.loads(response.data)
         assert isinstance(data, dict)
     
     def test_update_app_settings(self, client):
         """Test PUT /api/config/settings"""
-        response = client.put('/api/config/settings',
+        response = client.put('/api/config/settings/',
             json={
                 'timezone': 'America/New_York',
                 'test_setting': 'test_value'
@@ -404,6 +406,6 @@ class TestConfigRoutes:
         assert response.status_code == 200
         
         # Verify update
-        response = client.get('/api/config/settings')
+        response = client.get('/api/config/settings/')
         data = json.loads(response.data)
         assert data.get('test_setting') == 'test_value'
