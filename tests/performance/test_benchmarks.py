@@ -114,25 +114,29 @@ class TestPerformanceBenchmarks:
         """Benchmark database query performance"""
         # Insert test data
         with test_db.get_connection() as conn:
-            # Create employees
+            # Create employees and track their IDs
+            employee_ids = []
             for i in range(10):
-                conn.execute(
-                    "INSERT INTO employees (friendly_name, system_name) VALUES (?, ?)",
-                    (f'Employee {i}', f'emp{i}')
+                cursor = conn.execute(
+                    "INSERT INTO employees (friendly_name, system_name, active) VALUES (?, ?, ?)",
+                    (f'Employee {i}', f'emp{i}', 1)
                 )
+                employee_ids.append(cursor.lastrowid)
             
-            # Create children
+            # Create children and track their IDs
+            child_ids = []
             for i in range(10):
-                conn.execute(
-                    "INSERT INTO children (name, code) VALUES (?, ?)",
-                    (f'Child {i}', f'CH{i:03d}')
+                cursor = conn.execute(
+                    "INSERT INTO children (name, code, active) VALUES (?, ?, ?)",
+                    (f'Child {i}', f'CH{i:03d}', 1)
                 )
+                child_ids.append(cursor.lastrowid)
             
-            # Create many shifts
+            # Create many shifts using actual IDs
             base_date = date.today() - timedelta(days=180)
             for day in range(180):
-                for emp_id in range(1, 6):
-                    for child_id in range(1, 6):
+                for emp_id in employee_ids[:5]:  # Use first 5 employees
+                    for child_id in child_ids[:5]:  # Use first 5 children
                         shift_date = base_date + timedelta(days=day)
                         conn.execute(
                             """INSERT INTO shifts (employee_id, child_id, date, start_time, end_time)
@@ -249,18 +253,20 @@ class TestDataIntegrity:
     def test_large_dataset_handling(self, test_db):
         """Test handling large datasets"""
         with test_db.get_connection() as conn:
-            # Create large dataset
-            conn.execute("INSERT INTO employees (friendly_name, system_name) VALUES ('Test', 'test')")
-            conn.execute("INSERT INTO children (name, code) VALUES ('Child', 'C001')")
+            # Create large dataset and get the actual IDs
+            cursor = conn.execute("INSERT INTO employees (friendly_name, system_name, active) VALUES ('Test', 'test', 1)")
+            emp_id = cursor.lastrowid
+            cursor = conn.execute("INSERT INTO children (name, code, active) VALUES ('Child', 'C001', 1)")
+            child_id = cursor.lastrowid
             
-            # Insert many shifts
+            # Insert many shifts using actual IDs
             base_date = date.today() - timedelta(days=365)
             for day in range(365):
                 shift_date = base_date + timedelta(days=day)
                 conn.execute(
                     """INSERT INTO shifts (employee_id, child_id, date, start_time, end_time)
-                       VALUES (1, 1, ?, ?, ?)""",
-                    (shift_date.isoformat(), '09:00:00', '17:00:00')
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (emp_id, child_id, shift_date.isoformat(), '09:00:00', '17:00:00')
                 )
             
             # Query large dataset
@@ -278,7 +284,7 @@ class TestDataIntegrity:
         try:
             with test_db.get_connection() as conn:
                 # Start transaction
-                conn.execute("INSERT INTO employees (friendly_name, system_name) VALUES ('Trans Test', 'trans')")
+                conn.execute("INSERT INTO employees (friendly_name, system_name, active) VALUES ('Trans Test', 'trans', 1)")
                 emp_id = conn.lastrowid
                 
                 # Force an error to trigger rollback
@@ -294,8 +300,11 @@ class TestDataIntegrity:
     def test_constraint_enforcement_under_load(self, test_db):
         """Test constraint enforcement with many operations"""
         with test_db.get_connection() as conn:
-            conn.execute("INSERT INTO employees (id, friendly_name, system_name) VALUES (1, 'Test', 'test')")
-            conn.execute("INSERT INTO children (id, name, code) VALUES (1, 'Child', 'C001')")
+            # Use unique names to avoid conflicts with other tests
+            cursor = conn.execute("INSERT INTO employees (friendly_name, system_name, active) VALUES ('Constraint Test', 'constraint_test', 1)")
+            emp_id = cursor.lastrowid
+            cursor = conn.execute("INSERT INTO children (name, code, active) VALUES ('Constraint Child', 'CC001', 1)")
+            child_id = cursor.lastrowid
             
             # Try to create many duplicate shifts (should fail)
             duplicate_count = 0
@@ -303,7 +312,8 @@ class TestDataIntegrity:
                 try:
                     conn.execute(
                         """INSERT INTO shifts (employee_id, child_id, date, start_time, end_time)
-                           VALUES (1, 1, '2025-01-01', '09:00:00', '17:00:00')"""
+                           VALUES (?, ?, '2025-01-01', '09:00:00', '17:00:00')""",
+                        (emp_id, child_id)
                     )
                 except Exception:
                     duplicate_count += 1
