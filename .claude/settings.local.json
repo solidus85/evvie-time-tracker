@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(source:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }
