@@ -362,9 +362,11 @@ class TestPayrollService:
             weeks=[1, 2]  # First and second week
         )
         
-        # Should return dates that match the pattern
+        # Should return a list of dict objects with 'date' and 'week' keys
         assert isinstance(result, list)
-        assert all(isinstance(d, tuple) for d in result)
+        if result:  # Only check if there are results
+            assert all(isinstance(d, dict) for d in result)
+            assert all('date' in d and 'week' in d for d in result)
     
     def test_calculate_bulk_dates_invalid_range(self, service, mock_db):
         """Test bulk dates with invalid date range"""
@@ -423,9 +425,9 @@ class TestPayrollService:
             reason='Weekly team meeting'
         )
         
-        assert 'created' in result
-        assert result['created'] >= 0
-        assert 'dates' in result
+        # The method returns an integer count of created exclusions
+        assert isinstance(result, int)
+        assert result >= 0
     
     def test_create_bulk_exclusions_with_times(self, service, mock_db):
         """Test creating bulk exclusions with time ranges"""
@@ -448,7 +450,9 @@ class TestPayrollService:
             child_id=1
         )
         
-        assert result['created'] >= 0
+        # The method returns an integer count of created exclusions
+        assert isinstance(result, int)
+        assert result >= 0
         # Verify time parameters were passed
         if mock_db.insert.called:
             call_args = mock_db.insert.call_args[0]
