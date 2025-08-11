@@ -278,4 +278,88 @@ invalid-date,{sample_data['child'].name} ({sample_data['child'].code}),{sample_d
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert data['imported'] >= 0
+        assert data['imported'] >= 0    
+    def test_batch_csv_import(self, client, sample_data):
+        """Test batch CSV import with multiple files"""
+        csv1 = f"""Date,Consumer,Employee,Start Time,End Time
+02/01/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].friendly_name},09:00 AM,05:00 PM"""
+        
+        csv2 = f"""Date,Consumer,Employee,Start Time,End Time
+02/02/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].friendly_name},10:00 AM,06:00 PM"""
+        
+        response = client.post('/api/import/batch-csv',
+            data={
+                'files': [
+                    (BytesIO(csv1.encode('utf-8')), 'file1.csv', 'text/csv'),
+                    (BytesIO(csv2.encode('utf-8')), 'file2.csv', 'text/csv')
+                ]
+            },
+            content_type='multipart/form-data')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert 'total_imported' in data
+        assert 'files_processed' in data
+        assert data['files_processed'] == 2
+    
+    def test_batch_csv_import_no_files(self, client):
+        """Test batch import without files"""
+        response = client.post('/api/import/batch-csv',
+            data={},
+            content_type='multipart/form-data')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+    
+    def test_batch_csv_import_mixed_files(self, client, sample_data):
+        """Test batch import with mixed valid and invalid files"""
+        csv_valid = f"""Date,Consumer,Employee,Start Time,End Time
+02/03/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].friendly_name},09:00 AM,05:00 PM"""
+        
+        response = client.post('/api/import/batch-csv',
+            data={
+                'files': [
+                    (BytesIO(csv_valid.encode('utf-8')), 'valid.csv', 'text/csv'),
+                    (BytesIO(b'not a csv'), 'invalid.txt', 'text/plain')
+                ]
+            },
+            content_type='multipart/form-data')
+        
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert len(data['errors']) > 0  # Should have error for .txt file
+    
+    def test_pdf_budget_import(self, client):
+        """Test PDF budget import endpoint"""
+        pdf_content = b'%PDF-1.4\n%%Mock PDF for testing'
+        
+        response = client.post('/api/import/budget-pdf',
+            data={'file': (BytesIO(pdf_content), 'budget.pdf', 'application/pdf')},
+            content_type='multipart/form-data')
+        
+        # Should handle PDF files (may fail to parse but shouldn't error)
+        assert response.status_code in [200, 400]
+        data = json.loads(response.data)
+        assert 'error' in data or 'parsed_data' in data or 'result' in data
+    
+    def test_pdf_budget_import_no_file(self, client):
+        """Test PDF import without file"""
+        response = client.post('/api/import/budget-pdf',
+            data={},
+            content_type='multipart/form-data')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+    
+    def test_pdf_budget_import_wrong_type(self, client):
+        """Test PDF import with non-PDF file"""
+        response = client.post('/api/import/budget-pdf',
+            data={'file': (BytesIO(b'not a pdf'), 'test.txt', 'text/plain')},
+            content_type='multipart/form-data')
+        
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert 'error' in data
+        assert 'PDF' in data['error']
