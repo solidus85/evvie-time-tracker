@@ -26,7 +26,19 @@ def get_employee(employee_id):
 @bp.route('/', methods=['POST'])
 def create_employee():
     try:
-        data = request.json
+        # Check content type
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        
+        # Try to get JSON data with error handling
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        
+        if not data:
+            return jsonify({'error': 'Request body cannot be empty'}), 400
+            
         if not data.get('friendly_name') or not data.get('system_name'):
             return jsonify({'error': 'Missing required fields'}), 400
         

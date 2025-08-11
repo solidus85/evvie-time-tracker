@@ -320,7 +320,7 @@ class TestDataValidation:
     
     def test_currency_precision(self, client, sample_data):
         """Test currency/money field precision"""
-        response = client.post('/api/budget/child-budgets',
+        response = client.post('/api/budget/children',
             json={
                 'child_id': sample_data['child'].id,
                 'period_start': '2025-07-01',
@@ -335,13 +335,13 @@ class TestDataValidation:
     def test_percentage_boundaries(self, client, sample_data):
         """Test percentage field boundaries"""
         # Test > 100%
-        response = client.post('/api/config/settings',
+        response = client.put('/api/config/settings',
             json={'overtime_rate': 150.0})  # 150%
         
         assert response.status_code in [200, 201, 400, 404]
         
         # Test negative percentage
-        response = client.post('/api/config/settings',
+        response = client.put('/api/config/settings',
             json={'discount_rate': -10.0})  # -10%
         
         assert response.status_code in [200, 201, 400, 404]

@@ -50,7 +50,26 @@ def create_shift():
         except (ValueError, TypeError):
             return jsonify({'error': 'Invalid employee or child ID'}), 400
         
+        # Validate date is a real date
+        try:
+            datetime.strptime(data['date'], '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'error': 'Invalid date format or non-existent date'}), 400
+        
         service = ShiftService(current_app.db)
+        
+        # Check if employee and child exist
+        employee = current_app.db.fetchone(
+            "SELECT id FROM employees WHERE id = ?", (employee_id,)
+        )
+        if not employee:
+            return jsonify({'error': f'Employee with ID {employee_id} not found'}), 404
+        
+        child = current_app.db.fetchone(
+            "SELECT id FROM children WHERE id = ?", (child_id,)
+        )
+        if not child:
+            return jsonify({'error': f'Child with ID {child_id} not found'}), 404
         
         # Validate the shift first - this will raise ValueError for conflicts
         try:
@@ -93,12 +112,25 @@ def create_shift():
                 status=data.get('status', 'new')
             )
         except Exception as e:
-            # Handle database errors (like unique constraints)
-            current_app.logger.error(f"Failed to create shift: {str(e)}")
-            return jsonify({
-                'error': 'Failed to create shift',
-                'message': 'An unexpected error occurred while saving the shift. Please try again.'
-            }), 500
+            # Handle database errors (like unique constraints and foreign key violations)
+            error_msg = str(e)
+            current_app.logger.error(f"Failed to create shift: {error_msg}")
+            
+            if 'FOREIGN KEY constraint failed' in error_msg:
+                return jsonify({
+                    'error': 'Invalid reference',
+                    'message': 'The specified employee or child does not exist.'
+                }), 400
+            elif 'UNIQUE constraint failed' in error_msg:
+                return jsonify({
+                    'error': 'Duplicate shift',
+                    'message': 'A shift with these details already exists.'
+                }), 409
+            else:
+                return jsonify({
+                    'error': 'Failed to create shift',
+                    'message': 'An unexpected error occurred while saving the shift. Please try again.'
+                }), 500
         
         response = {'id': shift_id, 'message': 'Shift created successfully'}
         if warnings:
