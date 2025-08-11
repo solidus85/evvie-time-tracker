@@ -123,7 +123,7 @@ class TestShiftManagementWorkflow:
         child = json.loads(child_response.data)
         
         # Set hour limit
-        response = client.post('/api/config/hour-limits/',
+        response = client.post('/api/config/hour-limits',
             json={
                 'employee_id': emp['id'],
                 'child_id': child['id'],
@@ -210,7 +210,7 @@ class TestShiftManagementWorkflow:
         assert response.status_code == 200
         
         # Query all shifts (status filtering not implemented yet)
-        response = client.get(f'/api/shifts/?start_date={shift_date}&end_date={shift_date}')
+        response = client.get(f'/api/shifts/?start_date={tomorrow}&end_date={tomorrow}')
         all_shifts = json.loads(response.data)
         # Find the cancelled shift
         cancelled_shift = next((s for s in all_shifts if s['id'] == shift['id']), None)
