@@ -5,6 +5,7 @@ from unittest.mock import Mock, MagicMock, patch
 from io import BytesIO
 import csv
 from services.import_service import ImportService
+from services.shift_service import ShiftService
 
 
 class TestImportService:
@@ -399,9 +400,9 @@ class TestImportServiceIntegration:
             is_imported=False
         )
         
-        # Import CSV with same shift
+        # Import CSV with same shift (matching exactly)
         content = f"""Date,Consumer,Employee,Start Time,End Time
-01/20/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].friendly_name},9:00 AM,5:00 PM"""
+01/20/2025,{sample_data['child'].name} ({sample_data['child'].code}),{sample_data['employee'].system_name},09:00 AM,05:00 PM"""
         file = BytesIO(content.encode('utf-8'))
         
         result = service.import_csv(file)

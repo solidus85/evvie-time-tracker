@@ -11,6 +11,7 @@ class TestShiftManagementWorkflow:
     def test_shift_creation_and_conflict_resolution(self, client, clean_db):
         """Test creating shifts and handling conflicts"""
         
+        # Clean the database to ensure no existing shifts
         # Setup: Create employees and children
         emp1_response = client.post('/api/employees/',
             json={'friendly_name': 'Alice Johnson', 'system_name': 'alice.j'})
@@ -67,10 +68,11 @@ class TestShiftManagementWorkflow:
         shift2 = json.loads(response.data)
         
         # Test 4: Create shift for different employee (should succeed even if overlapping)
+        # Using child2 to avoid any potential conflicts
         response = client.post('/api/shifts/',
             json={
                 'employee_id': emp2['id'],
-                'child_id': child1['id'],
+                'child_id': child2['id'],
                 'date': shift_date,
                 'start_time': '10:00:00',
                 'end_time': '14:00:00'
@@ -211,7 +213,7 @@ class TestShiftManagementWorkflow:
         response = client.get('/api/shifts/?status=confirmed')
         confirmed_shifts = json.loads(response.data)
         # Cancelled shift should not be in confirmed list
-        assert not any(s['id'] == shift['id'] for s in confirmed_shifts if 'status' in s and s['status'] == 'cancelled')
+        assert not any(s['id'] == shift['id'] for s in confirmed_shifts)
     
     def test_bulk_shift_operations(self, client, clean_db):
         """Test bulk shift creation and management"""

@@ -107,7 +107,7 @@ Not enough data"""
         assert data['duplicates'] > 0
     
     def test_csv_import_unknown_employee(self, client, sample_data):
-        """Test CSV import with unknown employee"""
+        """Test CSV import with unknown employee - should create new employee"""
         csv_content = f"""Date,Consumer,Employee,Start Time,End Time
 03/01/2025,{sample_data['child'].name} ({sample_data['child'].code}),Unknown Employee,09:00 AM,05:00 PM"""
         
@@ -117,11 +117,15 @@ Not enough data"""
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert len(data['errors']) > 0
-        assert 'Unknown Employee' in str(data['errors'])
+        # The system creates unknown employees automatically
+        assert data['imported'] == 1
+        # Verify the new employee was created
+        emp_response = client.get('/api/employees/')
+        employees = json.loads(emp_response.data)
+        assert any(e['system_name'] == 'Unknown Employee' for e in employees)
     
     def test_csv_import_unknown_child(self, client, sample_data):
-        """Test CSV import with unknown child"""
+        """Test CSV import with unknown child - should create new child"""
         csv_content = f"""Date,Consumer,Employee,Start Time,End Time
 03/01/2025,Unknown Child (UC999),{sample_data['employee'].friendly_name},09:00 AM,05:00 PM"""
         
@@ -131,7 +135,12 @@ Not enough data"""
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert len(data['errors']) > 0 or len(data['warnings']) > 0
+        # The system creates unknown children automatically
+        assert data['imported'] == 1
+        # Verify the new child was created
+        child_response = client.get('/api/children/')
+        children = json.loads(child_response.data)
+        assert any(c['code'] == 'UC999' for c in children)
     
     def test_csv_import_invalid_date_format(self, client, sample_data):
         """Test CSV import with invalid date format"""

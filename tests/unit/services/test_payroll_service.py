@@ -405,17 +405,18 @@ class TestPayrollService:
     def test_create_bulk_exclusions(self, service, mock_db):
         """Test creating multiple exclusions in bulk"""
         periods = [
-            {'start_date': '2025-01-01', 'end_date': '2025-01-14'},
+            {'start_date': '2025-01-02', 'end_date': '2025-01-15'},  # Thursday to Wednesday
+            {'start_date': '2025-01-16', 'end_date': '2025-01-29'},  # Next period
         ]
         mock_db.fetchall.return_value = periods
         mock_db.insert.return_value = 1
         
         result = service.create_bulk_exclusions(
             'Recurring Meeting',
-            start_date='2025-01-01',
-            end_date='2025-01-14',
+            start_date='2025-01-06',  # Start on Monday
+            end_date='2025-01-19',    # Two week period
             days_of_week=[1],  # Monday
-            weeks=[1],  # First week
+            weeks=[1, 2],  # Both weeks
             employee_id=1,
             reason='Weekly team meeting'
         )
@@ -427,15 +428,16 @@ class TestPayrollService:
     def test_create_bulk_exclusions_with_times(self, service, mock_db):
         """Test creating bulk exclusions with time ranges"""
         periods = [
-            {'start_date': '2025-01-01', 'end_date': '2025-01-14'},
+            {'start_date': '2025-01-02', 'end_date': '2025-01-15'},  # Thursday to Wednesday
+            {'start_date': '2025-01-16', 'end_date': '2025-01-29'},  # Next period
         ]
         mock_db.fetchall.return_value = periods
         mock_db.insert.return_value = 1
         
         result = service.create_bulk_exclusions(
             'Morning Training',
-            start_date='2025-01-01',
-            end_date='2025-01-14',
+            start_date='2025-01-06',  # Start on Monday
+            end_date='2025-01-19',    # Two week period
             start_time='09:00:00',
             end_time='11:00:00',
             days_of_week=[2, 4],  # Tuesday and Thursday

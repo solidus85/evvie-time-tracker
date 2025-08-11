@@ -64,14 +64,17 @@ class TestPayrollWorkflow:
             shift_date = period_start + timedelta(days=day_offset)
             if shift_date.weekday() < 5:  # Weekdays only
                 for emp in employees[:1]:  # First employee only
-                    for child in children:
+                    for idx, child in enumerate(children):
+                        # Stagger times to avoid conflicts
+                        start_hour = 9 if idx == 0 else 14
+                        end_hour = 13 if idx == 0 else 18
                         response = client.post('/api/shifts/',
                             json={
                                 'employee_id': emp['id'],
                                 'child_id': child['id'],
                                 'date': shift_date.isoformat(),
-                                'start_time': '09:00:00',
-                                'end_time': '17:00:00'
+                                'start_time': f'{start_hour:02d}:00:00',
+                                'end_time': f'{end_hour:02d}:00:00'
                             })
                         assert response.status_code == 201
                         shifts.append(json.loads(response.data))
