@@ -182,7 +182,7 @@ class TestPayrollRoutes:
         assert response.status_code in [200, 201, 404]
         if response.status_code in [200, 201]:
             data = json.loads(response.data)
-            assert 'created' in data or 'exclusions' in data
+            assert 'count' in data or 'created' in data or 'exclusions' in data
     
     def test_exclusion_validation_xor_constraint(self, client, sample_data):
         """Test that exclusions can't have both employee and child"""

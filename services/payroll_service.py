@@ -244,6 +244,34 @@ class PayrollService:
             (end_date.isoformat(), start_date.isoformat())
         )
         
+        # If no periods exist, just calculate dates without period context
+        if not periods:
+            current = start_date
+            while current <= end_date:
+                python_weekday = current.weekday()
+                js_weekday = (python_weekday + 1) % 7
+                
+                if js_weekday in days_of_week:
+                    # Without periods, assume all dates are valid
+                    if isinstance(weeks, list):
+                        # If weeks is a list, include dates in those week numbers of the month
+                        week_of_month = ((current.day - 1) // 7) + 1
+                        if week_of_month in weeks:
+                            matching_dates.append({
+                                'date': current.isoformat(),
+                                'week': week_of_month
+                            })
+                    else:
+                        # String format or no week restriction
+                        matching_dates.append({
+                            'date': current.isoformat(),
+                            'week': 1
+                        })
+                
+                current += timedelta(days=1)
+            
+            return matching_dates
+        
         for period in periods:
             period_start = datetime.strptime(period['start_date'], '%Y-%m-%d').date()
             period_end = datetime.strptime(period['end_date'], '%Y-%m-%d').date()
@@ -270,11 +298,19 @@ class PayrollService:
                         week_num = 2
                     
                     # Check if this week is selected
-                    if weeks == 'both' or (weeks == 'week1' and week_num == 1) or (weeks == 'week2' and week_num == 2):
-                        matching_dates.append({
-                            'date': current.isoformat(),
-                            'week': week_num
-                        })
+                    # Handle both string format ('both', 'week1', 'week2') and list format ([1], [2], [1,2])
+                    if isinstance(weeks, str):
+                        if weeks == 'both' or (weeks == 'week1' and week_num == 1) or (weeks == 'week2' and week_num == 2):
+                            matching_dates.append({
+                                'date': current.isoformat(),
+                                'week': week_num
+                            })
+                    elif isinstance(weeks, list):
+                        if week_num in weeks:
+                            matching_dates.append({
+                                'date': current.isoformat(),
+                                'week': week_num
+                            })
                 
                 current += timedelta(days=1)
         
