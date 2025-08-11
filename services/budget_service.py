@@ -320,10 +320,12 @@ class BudgetService:
             'budget_hours': budget['budget_hours'],
             'actual_hours': round(total_hours_used, 2),
             'actual_cost': round(total_cost_used, 2),
+            'spent': round(total_cost_used, 2),  # Alias for actual_cost for compatibility
             'shift_count': 0,  # Not tracking this anymore since we use report data
             'hours_remaining': round((budget['budget_hours'] or 0) - total_hours_used, 2),
             'amount_remaining': round((budget['budget_amount'] or 0) - total_cost_used, 2),
-            'utilization_percent': round((total_hours_used / budget['budget_hours'] * 100) if budget['budget_hours'] else 0, 2)
+            'utilization_percent': round((total_hours_used / budget['budget_hours'] * 100) if budget['budget_hours'] else 0, 2),
+            'utilization_percentage': round((total_hours_used / budget['budget_hours'] * 100) if budget['budget_hours'] else 0, 2)  # Alias for compatibility
         }
     
     def import_budgets_csv(self, file):
