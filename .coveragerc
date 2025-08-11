@@ -1,0 +1,40 @@
+[run]
+source = .
+omit = 
+    tests/*
+    test_*.py
+    *_test.py
+    venv/*
+    env/*
+    .venv/*
+    */site-packages/*
+    */__pycache__/*
+    setup.py
+    */migrations/*
+    config.py
+    
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    except ImportError
+    except KeyError
+    except Exception as e
+    
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov
+title = Evvie Time Tracker Coverage Report
+
+[xml]
+output = coverage.xml
