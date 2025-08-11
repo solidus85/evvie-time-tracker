@@ -103,17 +103,17 @@ class TestPayrollWorkflow:
                 'employee_id': employees[0]['id'],
                 'reason': 'Public holiday'
             })
-        assert response.status_code in [201, 404]  # May not have exclusions endpoint
+        assert response.status_code == 201
         
         # Step 6: Set hour limits
-        response = client.post('/api/config/hour-limits/',
+        response = client.post('/api/config/hour-limits',
             json={
                 'employee_id': employees[0]['id'],
                 'child_id': children[0]['id'],
                 'max_hours_per_week': 40.0,
                 'alert_threshold': 35.0
             })
-        assert response.status_code in [201, 404]  # May not have hour limits endpoint
+        assert response.status_code == 201
         
         # Step 7: Get period summary
         response = client.get(f'/api/payroll/periods/{period["id"]}/summary')
@@ -138,12 +138,20 @@ class TestPayrollWorkflow:
         assert import_result['imported'] >= 0
         
         # Step 9: Export data as CSV
-        response = client.get(f'/api/export/csv?start_date={period["start_date"]}&end_date={period["end_date"]}')
+        response = client.post('/api/export/csv',
+            json={
+                'start_date': period["start_date"],
+                'end_date': period["end_date"]
+            })
         assert response.status_code == 200
-        assert response.content_type == 'text/csv'
+        assert 'text/csv' in response.content_type
         
         # Step 10: Export data as JSON
-        response = client.get(f'/api/export/json?start_date={period["start_date"]}&end_date={period["end_date"]}')
+        response = client.post('/api/export/json',
+            json={
+                'start_date': period["start_date"],
+                'end_date': period["end_date"]
+            })
         assert response.status_code == 200
         export_data = json.loads(response.data)
         
@@ -163,9 +171,11 @@ class TestPayrollWorkflow:
         assert response.status_code == 200
         final_summary = json.loads(response.data)
         
-        # Should have fewer shifts after deletion
-        if 'total_shifts' in final_summary and 'total_shifts' in summary:
-            assert final_summary['total_shifts'] <= summary['total_shifts']
+        # Should have fewer shifts than before deletion (accounting for CSV import)
+        # Original shifts + imported shifts - 1 deleted shift
+        expected_shifts = summary['total_shifts'] + import_result.get('imported', 0) - 1
+        if 'total_shifts' in final_summary:
+            assert final_summary['total_shifts'] == expected_shifts
     
     def test_payroll_period_navigation(self, client, clean_db):
         """Test navigating between payroll periods"""
@@ -251,7 +261,11 @@ class TestPayrollWorkflow:
             assert summary['total_shifts'] >= shift_count
             
             # Export and verify
-            response = client.get(f'/api/export/json?start_date={period["start_date"]}&end_date={period["end_date"]}')
+            response = client.post('/api/export/json',
+                json={
+                    'start_date': period["start_date"],
+                    'end_date': period["end_date"]
+                })
             assert response.status_code == 200
             export_data = json.loads(response.data)
             
