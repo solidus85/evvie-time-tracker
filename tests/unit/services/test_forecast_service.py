@@ -416,17 +416,21 @@ class TestForecastServiceIntegration:
     
     def test_historical_patterns_analysis(self, test_db, sample_data):
         """Test historical pattern analysis with real data"""
+        from datetime import date, timedelta
         service = ForecastService(test_db)
         
-        # Create shifts with patterns (Mondays and Wednesdays)
-        dates = [
-            '2025-01-06',  # Monday
-            '2025-01-08',  # Wednesday
-            '2025-01-13',  # Monday
-            '2025-01-15',  # Wednesday
-            '2025-01-20',  # Monday
-            '2025-01-22',  # Wednesday
-        ]
+        # Create shifts with patterns in recent past (within lookback period)
+        today = date.today()
+        # Go back 2 weeks and create shifts on Mondays and Wednesdays
+        dates = []
+        for weeks_back in range(3):  # 3 weeks of data
+            week_start = today - timedelta(days=7 * weeks_back + today.weekday())
+            monday = week_start
+            wednesday = week_start + timedelta(days=2)
+            if monday <= today:
+                dates.append(monday.isoformat())
+            if wednesday <= today:
+                dates.append(wednesday.isoformat())
         
         for date_str in dates:
             test_db.insert(

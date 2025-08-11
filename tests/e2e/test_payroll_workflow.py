@@ -15,27 +15,41 @@ class TestPayrollWorkflow:
         # Step 1: Create employees
         employees = []
         for i in range(2):
+            emp_name = f'Employee {i+1}'
+            emp_system = f'emp{i+1}'
             response = client.post('/api/employees/',
                 json={
-                    'friendly_name': f'Employee {i+1}',
-                    'system_name': f'emp{i+1}',
+                    'friendly_name': emp_name,
+                    'system_name': emp_system,
                     'hourly_rate': 25.00 + (i * 5)
                 })
             assert response.status_code == 201
             emp_data = json.loads(response.data)
-            employees.append(emp_data)
+            # Store the employee info including what we sent
+            employees.append({
+                'id': emp_data['id'],
+                'friendly_name': emp_name,
+                'system_name': emp_system
+            })
         
         # Step 2: Create children
         children = []
         for i in range(2):
+            child_name = f'Child {i+1}'
+            child_code = f'CH00{i+1}'
             response = client.post('/api/children/',
                 json={
-                    'name': f'Child {i+1}',
-                    'code': f'CH00{i+1}'
+                    'name': child_name,
+                    'code': child_code
                 })
             assert response.status_code == 201
             child_data = json.loads(response.data)
-            children.append(child_data)
+            # Store the child info including what we sent
+            children.append({
+                'id': child_data['id'],
+                'name': child_name,
+                'code': child_code
+            })
         
         # Step 3: Get current payroll period
         response = client.get('/api/payroll/periods/current')

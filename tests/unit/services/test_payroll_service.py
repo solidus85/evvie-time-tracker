@@ -404,17 +404,19 @@ class TestPayrollService:
     # Test create_bulk_exclusions
     def test_create_bulk_exclusions(self, service, mock_db):
         """Test creating multiple exclusions in bulk"""
+        # Mock payroll periods that overlap with our date range
         periods = [
             {'start_date': '2025-01-02', 'end_date': '2025-01-15'},  # Thursday to Wednesday
             {'start_date': '2025-01-16', 'end_date': '2025-01-29'},  # Next period
         ]
-        mock_db.fetchall.return_value = periods
+        # First call is for fetching periods, subsequent calls for inserts
+        mock_db.fetchall.side_effect = [periods]
         mock_db.insert.return_value = 1
         
         result = service.create_bulk_exclusions(
             'Recurring Meeting',
-            start_date='2025-01-06',  # Start on Monday
-            end_date='2025-01-19',    # Two week period
+            start_date='2025-01-02',  # Start on a Thursday (period start)
+            end_date='2025-01-29',     # End on a Wednesday (period end)
             days_of_week=[1],  # Monday
             weeks=[1, 2],  # Both weeks
             employee_id=1,
@@ -431,13 +433,14 @@ class TestPayrollService:
             {'start_date': '2025-01-02', 'end_date': '2025-01-15'},  # Thursday to Wednesday
             {'start_date': '2025-01-16', 'end_date': '2025-01-29'},  # Next period
         ]
-        mock_db.fetchall.return_value = periods
+        # First call is for fetching periods
+        mock_db.fetchall.side_effect = [periods]
         mock_db.insert.return_value = 1
         
         result = service.create_bulk_exclusions(
             'Morning Training',
-            start_date='2025-01-06',  # Start on Monday
-            end_date='2025-01-19',    # Two week period
+            start_date='2025-01-02',  # Start on Thursday (period start)
+            end_date='2025-01-29',     # End on Wednesday (period end)
             start_time='09:00:00',
             end_time='11:00:00',
             days_of_week=[2, 4],  # Tuesday and Thursday

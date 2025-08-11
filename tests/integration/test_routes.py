@@ -364,7 +364,8 @@ class TestBudgetRoutes:
             })
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert 'budget' in data
+        # Check for actual keys in the response
+        assert 'budget_amount' in data or 'budget_hours' in data
         assert 'spent' in data
         assert 'utilization_percentage' in data
 

@@ -293,7 +293,7 @@ class TestPDFBudgetParserIntegration:
         
         report_data = {
             'report_info': {
-                'client_name': 'Jane Smith',
+                'client_name': 'Smith, Jane',  # Last, First format
                 'pmi': '12345',
                 'report_date': '2025-01-15'
             },
