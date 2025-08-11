@@ -126,11 +126,19 @@ class TestBudgetRoutes:
         period_response = client.post('/api/payroll/periods/configure',
             json={'anchor_date': '2025-01-02'})
         
+        # Get the current period to use its ID
+        current_period_response = client.get('/api/payroll/periods/current')
+        if current_period_response.status_code == 200:
+            current_period = json.loads(current_period_response.data)
+            period_id = current_period.get('id', sample_data['payroll_period'].id)
+        else:
+            period_id = sample_data['payroll_period'].id
+        
         response = client.post('/api/budget/allocations',
             json={
                 'child_id': sample_data['child'].id,
                 'employee_id': sample_data['employee'].id,
-                'period_id': 1,
+                'period_id': period_id,
                 'allocated_hours': 40.0,
                 'notes': 'Weekly allocation'
             })

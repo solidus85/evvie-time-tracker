@@ -367,3 +367,143 @@ class BudgetService:
                 errors.append(f"Row {i}: {str(e)}")
         
         return {'imported': imported, 'errors': errors}
+    
+    def get_child_budget_by_id(self, budget_id):
+        """Get a specific child budget by ID"""
+        return self.db.fetchone(
+            """SELECT * FROM child_budgets WHERE id = ?""",
+            (budget_id,)
+        )
+    
+    def get_budget_summary(self):
+        """Get overall budget summary"""
+        summary = self.db.fetchall(
+            """SELECT 
+                cb.*, 
+                c.name as child_name,
+                c.code as child_code
+               FROM child_budgets cb
+               JOIN children c ON cb.child_id = c.id
+               ORDER BY cb.period_start DESC
+               LIMIT 50"""
+        )
+        return [dict(s) for s in summary]
+    
+    def get_budget_summary_by_period(self, start_date, end_date):
+        """Get budget summary for a specific period"""
+        summary = self.db.fetchall(
+            """SELECT 
+                cb.*, 
+                c.name as child_name,
+                c.code as child_code
+               FROM child_budgets cb
+               JOIN children c ON cb.child_id = c.id
+               WHERE cb.period_start <= ? AND cb.period_end >= ?
+               ORDER BY cb.period_start DESC""",
+            (end_date, start_date)
+        )
+        return [dict(s) for s in summary]
+    
+    def export_budget_csv(self, start_date, end_date):
+        """Export budget data as CSV"""
+        budgets = self.db.fetchall(
+            """SELECT 
+                c.code as child_code,
+                c.name as child_name,
+                cb.period_start,
+                cb.period_end,
+                cb.budget_hours,
+                cb.budget_amount,
+                cb.notes
+               FROM child_budgets cb
+               JOIN children c ON cb.child_id = c.id
+               WHERE cb.period_start <= ? AND cb.period_end >= ?
+               ORDER BY c.code, cb.period_start""",
+            (end_date, start_date)
+        )
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Child Code', 'Child Name', 'Period Start', 'Period End', 
+                        'Budget Hours', 'Budget Amount', 'Notes'])
+        
+        for budget in budgets:
+            writer.writerow([
+                budget['child_code'],
+                budget['child_name'],
+                budget['period_start'],
+                budget['period_end'],
+                budget['budget_hours'],
+                budget['budget_amount'],
+                budget['notes'] or ''
+            ])
+        
+        return output.getvalue()
+    
+    def export_budget_json(self, start_date, end_date):
+        """Export budget data as JSON"""
+        budgets = self.db.fetchall(
+            """SELECT 
+                c.code as child_code,
+                c.name as child_name,
+                cb.*
+               FROM child_budgets cb
+               JOIN children c ON cb.child_id = c.id
+               WHERE cb.period_start <= ? AND cb.period_end >= ?
+               ORDER BY c.code, cb.period_start""",
+            (end_date, start_date)
+        )
+        return [dict(b) for b in budgets]
+    
+    def get_budget_comparison(self, child_id, start_date, end_date):
+        """Get budget vs actual comparison for a child"""
+        budget = self.get_budget_for_period(child_id, start_date, end_date)
+        if not budget:
+            return None
+        
+        # Get actual hours from shifts
+        actual = self.db.fetchone(
+            """SELECT 
+                SUM((julianday(date || ' ' || end_time) - 
+                     julianday(date || ' ' || start_time)) * 24) as total_hours,
+                COUNT(*) as shift_count
+               FROM shifts
+               WHERE child_id = ? AND date >= ? AND date <= ?""",
+            (child_id, start_date, end_date)
+        )
+        
+        # Calculate costs
+        cost_result = self.db.fetchone(
+            """SELECT SUM(
+                    (julianday(s.date || ' ' || s.end_time) - 
+                     julianday(s.date || ' ' || s.start_time)) * 24 * 
+                    COALESCE(er.hourly_rate, e.hourly_rate, 25)
+                ) as total_cost
+               FROM shifts s
+               JOIN employees e ON s.employee_id = e.id
+               LEFT JOIN employee_rates er ON er.employee_id = e.id
+                   AND er.effective_date <= s.date
+                   AND (er.end_date IS NULL OR er.end_date >= s.date)
+               WHERE s.child_id = ? AND s.date >= ? AND s.date <= ?""",
+            (child_id, start_date, end_date)
+        )
+        
+        actual_hours = actual['total_hours'] or 0
+        actual_cost = cost_result['total_cost'] or 0
+        
+        return {
+            'budget': {
+                'hours': budget['budget_hours'],
+                'amount': budget['budget_amount']
+            },
+            'actual': {
+                'hours': round(actual_hours, 2),
+                'amount': round(actual_cost, 2),
+                'shift_count': actual['shift_count'] or 0
+            },
+            'variance': {
+                'hours': round((budget['budget_hours'] or 0) - actual_hours, 2),
+                'amount': round((budget['budget_amount'] or 0) - actual_cost, 2),
+                'percent_used': round((actual_hours / budget['budget_hours'] * 100) if budget['budget_hours'] else 0, 2)
+            }
+        }

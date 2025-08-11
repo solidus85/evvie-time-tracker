@@ -28,7 +28,35 @@ def create_child_budget():
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
         
+        # Validation: Check date order
+        from datetime import datetime
+        try:
+            start_date = datetime.strptime(data['period_start'], '%Y-%m-%d').date()
+            end_date = datetime.strptime(data['period_end'], '%Y-%m-%d').date()
+            if end_date < start_date:
+                return jsonify({'error': 'End date cannot be before start date'}), 400
+        except ValueError:
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        
+        # Validation: Check for negative hours
+        if data.get('budget_hours') is not None and data['budget_hours'] < 0:
+            return jsonify({'error': 'Budget hours cannot be negative'}), 400
+        
+        # Validation: Check for negative amount
+        if data.get('budget_amount') is not None and data['budget_amount'] < 0:
+            return jsonify({'error': 'Budget amount cannot be negative'}), 400
+        
         service = BudgetService(current_app.db)
+        
+        # Check for duplicate periods
+        existing_budgets = service.get_child_budgets(data['child_id'])
+        for budget in existing_budgets:
+            existing_start = datetime.strptime(budget['period_start'], '%Y-%m-%d').date()
+            existing_end = datetime.strptime(budget['period_end'], '%Y-%m-%d').date()
+            # Check for overlap
+            if not (end_date < existing_start or start_date > existing_end):
+                return jsonify({'error': 'Budget period overlaps with existing budget'}), 409
+        
         budget_id = service.create_child_budget(
             child_id=data['child_id'],
             period_start=data['period_start'],
@@ -39,6 +67,17 @@ def create_child_budget():
         )
         
         return jsonify({'id': budget_id, 'message': 'Budget created successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/children/<int:budget_id>', methods=['GET'])
+def get_child_budget(budget_id):
+    try:
+        service = BudgetService(current_app.db)
+        budget = service.get_child_budget_by_id(budget_id)
+        if budget:
+            return jsonify(dict(budget))
+        return jsonify({'error': 'Budget not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -99,6 +138,26 @@ def create_employee_rate():
         )
         
         return jsonify({'id': rate_id, 'message': 'Rate created successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/rates/<int:employee_id>', methods=['GET'])
+def get_employee_rates_by_id(employee_id):
+    try:
+        service = BudgetService(current_app.db)
+        rates = service.get_employee_rates(employee_id)
+        return jsonify([dict(r) for r in rates])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/rates/<int:employee_id>/current', methods=['GET'])
+def get_current_employee_rate(employee_id):
+    try:
+        service = BudgetService(current_app.db)
+        rate = service.get_current_rate(employee_id)
+        if rate:
+            return jsonify({'hourly_rate': rate})
+        return jsonify({'error': 'No rate found for employee'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -175,6 +234,68 @@ def get_budget_utilization():
             return jsonify({'error': 'No budget found for specified period'}), 404
         
         return jsonify(utilization)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Summary Endpoints
+@bp.route('/summary', methods=['GET'])
+def get_budget_summary():
+    try:
+        service = BudgetService(current_app.db)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if start_date and end_date:
+            summary = service.get_budget_summary_by_period(start_date, end_date)
+        else:
+            summary = service.get_budget_summary()
+        
+        return jsonify(summary if summary else {})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Export Endpoint
+@bp.route('/export', methods=['GET'])
+def export_budget():
+    try:
+        format_type = request.args.get('format', 'csv')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if not start_date or not end_date:
+            return jsonify({'error': 'start_date and end_date required'}), 400
+        
+        service = BudgetService(current_app.db)
+        
+        if format_type == 'csv':
+            data = service.export_budget_csv(start_date, end_date)
+            return data, 200, {'Content-Type': 'text/csv'}
+        elif format_type == 'json':
+            data = service.export_budget_json(start_date, end_date)
+            return jsonify(data)
+        else:
+            return jsonify({'error': 'Unsupported format'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Comparison Endpoint
+@bp.route('/comparison/<int:child_id>', methods=['GET'])
+def get_budget_comparison(child_id):
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if not start_date or not end_date:
+            return jsonify({'error': 'start_date and end_date required'}), 400
+        
+        service = BudgetService(current_app.db)
+        comparison = service.get_budget_comparison(child_id, start_date, end_date)
+        
+        if comparison:
+            return jsonify(comparison)
+        return jsonify({'error': 'No data found for comparison'}), 404
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
