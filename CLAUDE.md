@@ -179,3 +179,4 @@ Local time management system for tracking employee hours working with children, 
 - Server: `python app.py`
 - Always test after changes before marking complete
 - Check for database migration issues on first run
+- Use .venv as the virtual environment always.
