@@ -73,16 +73,31 @@ def db(app):
 @pytest.fixture(scope='function')
 def clean_db(db):
     """Clean the database before each test."""
-    # Clean all tables except schema info
+    # Clean tables in order to respect foreign key constraints
     tables = [
-        'shifts', 'exclusion_periods', 'hour_limits', 
-        'payroll_periods', 'children', 'employees',
-        'child_budgets', 'employee_rates', 'budget_allocations',
-        'budget_reports', 'app_config'
+        'budget_allocations',  # References children, employees, payroll_periods
+        'employee_rates',      # References employees
+        'child_budgets',       # References children
+        'budget_reports',      # References children
+        'hour_limits',         # References employees and children
+        'shifts',              # References employees and children
+        'exclusion_periods',   # References employees and children
+        'payroll_periods',     # No foreign keys
+        'children',            # No foreign keys
+        'employees',           # No foreign keys
+        'app_config'           # No foreign keys
     ]
     
+    # Disable foreign key checks temporarily
+    db.execute('PRAGMA foreign_keys = OFF')
+    
     for table in tables:
-        db.execute(f'DELETE FROM {table}')
+        try:
+            db.execute(f'DELETE FROM {table}')
+        except Exception:
+            pass  # Ignore if table doesn't exist
+    
+    db.execute('PRAGMA foreign_keys = ON')
     db.commit()
     
     yield db
@@ -252,6 +267,46 @@ Jane Doe,Bob Jones,2024-01-08,10:00,18:00"""
 def auth_headers():
     """Mock authentication headers if needed in future."""
     return {'Authorization': 'Bearer test-token'}
+
+
+@pytest.fixture
+def test_db(app):
+    """Create a test database instance for integration tests."""
+    return app.db
+
+
+@pytest.fixture
+def sample_data(clean_db, sample_employee, sample_child, sample_payroll_period):
+    """Combined fixture for integration tests with common test data."""
+    # Create employee and child objects that match the expected structure
+    from types import SimpleNamespace
+    
+    employee = SimpleNamespace(
+        id=sample_employee['id'],
+        friendly_name=sample_employee['friendly_name'],
+        system_name=sample_employee['system_name'],
+        hourly_rate=sample_employee['hourly_rate'],
+        active=sample_employee['active']
+    )
+    
+    child = SimpleNamespace(
+        id=sample_child['id'],
+        name=sample_child['name'],
+        code=sample_child['code'],
+        active=sample_child['active']
+    )
+    
+    period = SimpleNamespace(
+        id=sample_payroll_period['id'],
+        start_date=sample_payroll_period['start_date'].isoformat(),
+        end_date=sample_payroll_period['end_date'].isoformat()
+    )
+    
+    return {
+        'employee': employee,
+        'child': child,
+        'payroll_period': period
+    }
 
 
 # Markers for test categorization
