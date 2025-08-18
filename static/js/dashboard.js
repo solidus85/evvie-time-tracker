@@ -93,6 +93,14 @@ App.prototype.renderCalendar = function(period, shifts) {
         addBtn.onclick = () => this.showShiftForm(dateStr);
         dayDiv.appendChild(addBtn);
         
+        // Add auto-generate button
+        const autoBtn = document.createElement('button');
+        autoBtn.className = 'day-auto-btn';
+        autoBtn.textContent = '⚡';
+        autoBtn.title = 'Auto-generate shifts';
+        autoBtn.onclick = () => this.showAutoGenerateForm(dateStr);
+        dayDiv.appendChild(autoBtn);
+        
         // Display exclusions for this date
         const dayExclusions = this.getExclusionsForDate(dateStr);
         dayExclusions.forEach(exclusion => {

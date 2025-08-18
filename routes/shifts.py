@@ -197,3 +197,26 @@ def delete_shift(shift_id):
         return jsonify({'error': 'Delete failed'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/auto-generate', methods=['POST'])
+def auto_generate_shifts():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        if not data.get('child_id') or not data.get('employee_id') or not data.get('date'):
+            return jsonify({'error': 'Missing required fields: child_id, employee_id, date'}), 400
+        
+        service = ShiftService(current_app.db)
+        
+        # Auto-generate shifts
+        result = service.auto_generate_shifts(
+            child_id=data['child_id'],
+            employee_id=data['employee_id'],
+            date=data['date']
+        )
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -143,6 +143,17 @@
     border-color: #ffe0b2;
 }
 
+.info-message {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 15px 0;
+    color: #1565c0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .detail-row {
     display: flex;
     justify-content: space-between;

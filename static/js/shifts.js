@@ -135,3 +135,71 @@ App.prototype.showShiftDetails = async function(shift) {
     `;
     this.showModal(content);
 };
+
+App.prototype.showAutoGenerateForm = async function(date) {
+    await this.loadInitialData();
+    
+    const content = `
+        <h2>Auto-Generate Shifts</h2>
+        <form id="auto-generate-form">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="date" value="${date}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Child</label>
+                <select name="child_id" required>
+                    <option value="">Select Child</option>
+                    ${this.children.filter(c => c.active).map(c => 
+                        `<option value="${c.id}" ${c.id === this.selectedChildId ? 'selected' : ''}>${c.name}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Employee</label>
+                <select name="employee_id" required>
+                    <option value="">Select Employee</option>
+                    ${this.employees.filter(e => e.active && !e.hidden).map(e => 
+                        `<option value="${e.id}">${e.friendly_name}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div class="info-message">
+                This will generate shifts for all free periods between 6 AM and 11:45 PM in 15-minute increments.
+                Existing shifts for other employees will be respected.
+            </div>
+            <button type="submit" class="btn-primary">Generate Shifts</button>
+        </form>
+    `;
+    this.showModal(content);
+    
+    document.getElementById('auto-generate-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            date: formData.get('date'),
+            child_id: formData.get('child_id'),
+            employee_id: formData.get('employee_id')
+        };
+        
+        try {
+            const result = await this.api('/api/shifts/auto-generate', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            if (result.created > 0) {
+                this.showToast(`Generated ${result.created} shift(s) successfully`);
+            } else if (result.message) {
+                this.showToast(result.message, 'warning');
+            } else {
+                this.showToast('No free periods available for shifts', 'warning');
+            }
+            
+            this.closeModal();
+            this.loadDashboard();
+        } catch (error) {
+            this.showToast(error.message || 'Failed to generate shifts', 'error');
+        }
+    });
+};

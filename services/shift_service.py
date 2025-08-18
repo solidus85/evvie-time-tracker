@@ -280,6 +280,132 @@ class ShiftService:
         self.db.execute(query, params)
         return True
     
+    def auto_generate_shifts(self, child_id, employee_id, date):
+        """Auto-generate shifts for employee in 15-minute increments for free periods"""
+        from datetime import datetime, time, timedelta
+        
+        # Define time boundaries (6 AM to 11:45 PM)
+        day_start = time(6, 0, 0)
+        day_end = time(23, 45, 0)
+        
+        # Get all existing shifts for this child on this date
+        existing_shifts = self.db.fetchall(
+            """SELECT * FROM shifts 
+               WHERE child_id = ? AND date = ?
+               ORDER BY start_time""",
+            (child_id, date)
+        )
+        
+        # Get exclusions for this date
+        exclusions = self.check_exclusions(employee_id, child_id, date, 
+                                           day_start.strftime('%H:%M:%S'), 
+                                           day_end.strftime('%H:%M:%S'))
+        
+        # Build list of blocked time periods for the child
+        blocked_periods = []
+        for shift in existing_shifts:
+            start = shift['start_time']
+            end = shift['end_time']
+            # Convert string times to time objects if needed
+            if isinstance(start, str):
+                start = datetime.strptime(start, '%H:%M:%S').time()
+            if isinstance(end, str):
+                end = datetime.strptime(end, '%H:%M:%S').time()
+            blocked_periods.append({
+                'start': start,
+                'end': end
+            })
+        
+        # Add exclusion periods if they have time constraints
+        for exc in exclusions:
+            if exc['start_time'] and exc['end_time']:
+                start = exc['start_time']
+                end = exc['end_time']
+                if isinstance(start, str):
+                    start = datetime.strptime(start, '%H:%M:%S').time()
+                if isinstance(end, str):
+                    end = datetime.strptime(end, '%H:%M:%S').time()
+                blocked_periods.append({
+                    'start': start,
+                    'end': end
+                })
+            elif not exc['start_time'] and not exc['end_time']:
+                # Full day exclusion
+                return {'created': 0, 'message': 'Full day exclusion exists'}
+        
+        # Sort blocked periods by start time
+        blocked_periods.sort(key=lambda x: x['start'])
+        
+        # Find free periods and generate shifts
+        created_shifts = []
+        current_time = day_start
+        
+        for period in blocked_periods:
+            period_start = period['start']
+            
+            # If there's a gap before this period, create a shift
+            if current_time < period_start:
+                # Round down to nearest 15 minutes for end time
+                end_time = period_start
+                
+                # Check for employee conflicts in this time range
+                employee_conflict = self.db.fetchone(
+                    """SELECT * FROM shifts 
+                       WHERE employee_id = ? AND date = ?
+                       AND NOT (end_time <= ? OR start_time >= ?)""",
+                    (employee_id, date, current_time.strftime('%H:%M:%S'), end_time.strftime('%H:%M:%S'))
+                )
+                
+                if not employee_conflict:
+                    # Create the shift
+                    shift_id = self.create(
+                        employee_id=employee_id,
+                        child_id=child_id,
+                        date=date,
+                        start_time=current_time.strftime('%H:%M:%S'),
+                        end_time=end_time.strftime('%H:%M:%S'),
+                        status='auto-generated'
+                    )
+                    created_shifts.append({
+                        'id': shift_id,
+                        'start_time': current_time.strftime('%H:%M:%S'),
+                        'end_time': end_time.strftime('%H:%M:%S')
+                    })
+            
+            # Update current time to after this period
+            period_end = period['end']
+            current_time = period_end
+        
+        # Handle remaining time after last blocked period
+        if current_time < day_end:
+            # Check for employee conflicts
+            employee_conflict = self.db.fetchone(
+                """SELECT * FROM shifts 
+                   WHERE employee_id = ? AND date = ?
+                   AND NOT (end_time <= ? OR start_time >= ?)""",
+                (employee_id, date, current_time.strftime('%H:%M:%S'), day_end.strftime('%H:%M:%S'))
+            )
+            
+            if not employee_conflict:
+                shift_id = self.create(
+                    employee_id=employee_id,
+                    child_id=child_id,
+                    date=date,
+                    start_time=current_time.strftime('%H:%M:%S'),
+                    end_time=day_end.strftime('%H:%M:%S'),
+                    status='auto-generated'
+                )
+                created_shifts.append({
+                    'id': shift_id,
+                    'start_time': current_time.strftime('%H:%M:%S'),
+                    'end_time': day_end.strftime('%H:%M:%S')
+                })
+        
+        return {
+            'created': len(created_shifts),
+            'shifts': created_shifts
+        }
+    
     def delete(self, shift_id):
         shift = self.get_by_id(shift_id)
         if not shift or shift['is_imported']:
