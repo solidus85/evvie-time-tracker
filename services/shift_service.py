@@ -284,6 +284,24 @@ class ShiftService:
         """Auto-generate shifts for employee in 15-minute increments for free periods"""
         from datetime import datetime, time, timedelta
         
+        # Helper function to round time down to nearest 15 minutes
+        def round_down_to_15(t):
+            if isinstance(t, str):
+                t = datetime.strptime(t, '%H:%M:%S').time()
+            minutes = t.hour * 60 + t.minute
+            rounded_minutes = (minutes // 15) * 15
+            return time(rounded_minutes // 60, rounded_minutes % 60, 0)
+        
+        # Helper function to round time up to nearest 15 minutes
+        def round_up_to_15(t):
+            if isinstance(t, str):
+                t = datetime.strptime(t, '%H:%M:%S').time()
+            minutes = t.hour * 60 + t.minute
+            rounded_minutes = ((minutes + 14) // 15) * 15
+            if rounded_minutes >= 24 * 60:
+                return time(23, 45, 0)
+            return time(rounded_minutes // 60, rounded_minutes % 60, 0)
+        
         # Define time boundaries (6 AM to 11:45 PM)
         day_start = time(6, 0, 0)
         day_end = time(23, 45, 0)
@@ -311,9 +329,11 @@ class ShiftService:
                 start = datetime.strptime(start, '%H:%M:%S').time()
             if isinstance(end, str):
                 end = datetime.strptime(end, '%H:%M:%S').time()
+            # Round the blocked period to 15-minute boundaries
+            # Round start DOWN and end UP to ensure no overlap
             blocked_periods.append({
-                'start': start,
-                'end': end
+                'start': round_down_to_15(start),
+                'end': round_up_to_15(end)
             })
         
         # Add exclusion periods if they have time constraints
@@ -325,9 +345,10 @@ class ShiftService:
                     start = datetime.strptime(start, '%H:%M:%S').time()
                 if isinstance(end, str):
                     end = datetime.strptime(end, '%H:%M:%S').time()
+                # Round exclusions to 15-minute boundaries too
                 blocked_periods.append({
-                    'start': start,
-                    'end': end
+                    'start': round_down_to_15(start),
+                    'end': round_up_to_15(end)
                 })
             elif not exc['start_time'] and not exc['end_time']:
                 # Full day exclusion
@@ -372,7 +393,7 @@ class ShiftService:
                         'end_time': end_time.strftime('%H:%M:%S')
                     })
             
-            # Update current time to after this period
+            # Update current time to after this period (already rounded)
             period_end = period['end']
             current_time = period_end
         
