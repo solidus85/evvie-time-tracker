@@ -102,10 +102,17 @@ App.prototype.renderCalendar = function(period, shifts) {
                 label = exclusion.child_name;
             }
             
-            // Show time range if specified, otherwise show "All day"
+            // Show time range based on what times are available
             let timeRange = 'All day';
             if (exclusion.start_time && exclusion.end_time) {
+                // Both times specified - show range
                 timeRange = `${this.formatTime(exclusion.start_time)}-${this.formatTime(exclusion.end_time)}`;
+            } else if (exclusion.start_time && !exclusion.end_time) {
+                // Only start time - exclusion starts at this time and goes to end of day
+                timeRange = `From ${this.formatTime(exclusion.start_time)}`;
+            } else if (!exclusion.start_time && exclusion.end_time) {
+                // Only end time - exclusion is from start of day until this time
+                timeRange = `Until ${this.formatTime(exclusion.end_time)}`;
             }
             
             exclusionDiv.innerHTML = `
@@ -258,19 +265,45 @@ App.prototype.parseHours = function(hoursStr) {
 App.prototype.getExclusionsForDate = function(dateStr) {
     if (!this.currentExclusions || this.currentExclusions.length === 0) return [];
     
-    // Filter exclusions that apply to this date and the selected child
-    return this.currentExclusions.filter(exclusion => {
-        // Check if date falls within exclusion period
-        if (dateStr >= exclusion.start_date && dateStr <= exclusion.end_date) {
-            // If it's a child-specific exclusion, only show if it matches the selected child
-            if (exclusion.child_id) {
-                return exclusion.child_id === this.selectedChildId;
+    // Filter and adjust exclusions that apply to this date
+    return this.currentExclusions
+        .filter(exclusion => {
+            // Check if date falls within exclusion period
+            if (dateStr >= exclusion.start_date && dateStr <= exclusion.end_date) {
+                // If it's a child-specific exclusion, only show if it matches the selected child
+                if (exclusion.child_id) {
+                    return exclusion.child_id === this.selectedChildId;
+                }
+                // Show employee-specific and general exclusions
+                return true;
             }
-            // Show employee-specific and general exclusions
-            return true;
-        }
-        return false;
-    });
+            return false;
+        })
+        .map(exclusion => {
+            // Create a copy to avoid modifying the original
+            const adjustedExclusion = {...exclusion};
+            
+            // Determine if this is the first day, last day, or a middle day
+            const isFirstDay = dateStr === exclusion.start_date;
+            const isLastDay = dateStr === exclusion.end_date;
+            
+            if (isFirstDay && isLastDay) {
+                // Single day exclusion - keep original times
+                // Already has correct start_time and end_time
+            } else if (isFirstDay) {
+                // First day - use start_time, but end at midnight (shown as "All day" if no end_time)
+                adjustedExclusion.end_time = null;
+            } else if (isLastDay) {
+                // Last day - start at midnight (shown as "All day" if no start_time), use end_time
+                adjustedExclusion.start_time = null;
+            } else {
+                // Middle day - full day exclusion
+                adjustedExclusion.start_time = null;
+                adjustedExclusion.end_time = null;
+            }
+            
+            return adjustedExclusion;
+        });
 };
 
 App.prototype.renderExclusionsSummary = function(exclusions) {
