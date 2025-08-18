@@ -46,7 +46,8 @@ def create_employee():
         employee_id = service.create(
             friendly_name=data['friendly_name'],
             system_name=data['system_name'],
-            active=data.get('active', True)
+            active=data.get('active', True),
+            hidden=data.get('hidden', False)
         )
         return jsonify({'id': employee_id, 'message': 'Employee created'}), 201
     except ValueError as e:

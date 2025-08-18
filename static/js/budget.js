@@ -519,7 +519,7 @@ App.prototype.populateBudgetDropdowns = async function() {
     document.getElementById('allocation-child').innerHTML = childOptions;
     
     // Employees dropdown
-    const activeEmployees = this.employees.filter(e => e.active);
+    const activeEmployees = this.employees.filter(e => e.active && !e.hidden);
     const employeeOptions = activeEmployees.map(emp => 
         `<option value="${emp.id}">${emp.friendly_name}</option>`
     ).join('');

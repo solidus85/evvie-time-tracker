@@ -166,7 +166,7 @@ App.prototype.showExclusionForm = async function(exclusion = null) {
                 <label>Employee</label>
                 <select name="employee_id">
                     <option value="">Select Employee</option>
-                    ${this.employees.filter(e => e.active).map(e => 
+                    ${this.employees.filter(e => e.active && !e.hidden).map(e => 
                         `<option value="${e.id}" ${exclusion?.employee_id === e.id ? 'selected' : ''}>${e.friendly_name}</option>`
                     ).join('')}
                 </select>
@@ -309,7 +309,7 @@ App.prototype.showBulkExclusionForm = async function() {
                 <label>Employee</label>
                 <select name="employee_id">
                     <option value="">Select Employee</option>
-                    ${this.employees.filter(e => e.active).map(e => 
+                    ${this.employees.filter(e => e.active && !e.hidden).map(e => 
                         `<option value="${e.id}">${e.friendly_name}</option>`
                     ).join('')}
                 </select>

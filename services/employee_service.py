@@ -21,14 +21,14 @@ class EmployeeService:
             (system_name,)
         )
     
-    def create(self, friendly_name, system_name, active=True):
+    def create(self, friendly_name, system_name, active=True, hidden=False):
         existing = self.get_by_system_name(system_name)
         if existing:
             raise ValueError(f"Employee with system name '{system_name}' already exists")
         
         return self.db.insert(
-            "INSERT INTO employees (friendly_name, system_name, active) VALUES (?, ?, ?)",
-            (friendly_name, system_name, active)
+            "INSERT INTO employees (friendly_name, system_name, active, hidden) VALUES (?, ?, ?, ?)",
+            (friendly_name, system_name, active, hidden)
         )
     
     def update(self, employee_id, data):
@@ -54,6 +54,10 @@ class EmployeeService:
         if 'active' in data:
             updates.append("active = ?")
             params.append(data['active'])
+        
+        if 'hidden' in data:
+            updates.append("hidden = ?")
+            params.append(data['hidden'])
         
         if not updates:
             return True

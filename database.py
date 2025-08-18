@@ -194,6 +194,10 @@ class Database:
             if 'hourly_rate' not in emp_column_names:
                 cursor.execute('ALTER TABLE employees ADD COLUMN hourly_rate REAL')
             
+            # Migration: add hidden to employees if needed
+            if 'hidden' not in emp_column_names:
+                cursor.execute('ALTER TABLE employees ADD COLUMN hidden BOOLEAN DEFAULT 0')
+            
             # Migration: rename max_hours_per_period to max_hours_per_week if needed
             cursor.execute("PRAGMA table_info(hour_limits)")
             columns = cursor.fetchall()

@@ -16,6 +16,10 @@ App.prototype.showEmployeeForm = function(employee = null) {
                 <label>Active</label>
                 <input type="checkbox" name="active" ${employee?.active !== false ? 'checked' : ''}>
             </div>
+            <div class="form-group">
+                <label>Hidden</label>
+                <input type="checkbox" name="hidden" ${employee?.hidden === true ? 'checked' : ''}>
+            </div>
             <button type="submit" class="btn-primary">Save</button>
         </form>
     `;
@@ -27,7 +31,8 @@ App.prototype.showEmployeeForm = function(employee = null) {
         const data = {
             friendly_name: formData.get('friendly_name'),
             system_name: formData.get('system_name'),
-            active: formData.get('active') === 'on'
+            active: formData.get('active') === 'on',
+            hidden: formData.get('hidden') === 'on'
         };
         
         try {
