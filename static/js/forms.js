@@ -18,7 +18,7 @@ App.prototype.showEmployeeForm = function(employee = null) {
             </div>
             <div class="form-group">
                 <label>Hidden</label>
-                <input type="checkbox" name="hidden" ${employee?.hidden === true ? 'checked' : ''}>
+                <input type="checkbox" name="hidden" ${employee?.hidden ? 'checked' : ''}>
             </div>
             <button type="submit" class="btn-primary">Save</button>
         </form>
