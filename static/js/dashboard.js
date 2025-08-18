@@ -17,20 +17,24 @@ App.prototype.loadDashboard = async function() {
     document.getElementById('period-label').textContent = 
         `${this.formatDate(this.currentPeriod.start_date)} - ${this.formatDate(this.currentPeriod.end_date)}`;
     
-    // Fetch both shifts and exclusions for the period
-    const [shifts, exclusions] = await Promise.all([
+    // Fetch shifts for selected child, all shifts for overlap detection, and exclusions
+    const [childShifts, allShifts, exclusions] = await Promise.all([
         this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}&child_id=${this.selectedChildId}`),
+        this.api(`/api/shifts?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}`),
         this.api(`/api/payroll/exclusions/for-period?start_date=${this.currentPeriod.start_date}&end_date=${this.currentPeriod.end_date}`)
     ]);
     
     // Store exclusions for use in calendar rendering and shift creation
     this.currentExclusions = exclusions;
     
-    this.renderCalendar(this.currentPeriod, shifts);
+    this.renderCalendar(this.currentPeriod, childShifts);
     this.renderExclusionsSummary(exclusions);
     
     // Calculate summary from filtered shifts
-    this.renderChildSummaryFromShifts(shifts, this.selectedChildId);
+    this.renderChildSummaryFromShifts(childShifts, this.selectedChildId);
+    
+    // Detect and display overlapping shifts
+    this.detectAndDisplayOverlaps(allShifts);
 };
 
 App.prototype.populateChildDropdown = function() {
@@ -309,4 +313,182 @@ App.prototype.getExclusionsForDate = function(dateStr) {
 App.prototype.renderExclusionsSummary = function(exclusions) {
     // Remove the exclusions summary section as exclusions are now shown in the calendar
     // This function can be left empty or removed entirely
+};
+
+App.prototype.detectAndDisplayOverlaps = function(allShifts) {
+    const overlaps = [];
+    
+    // Group shifts by employee and by child
+    const shiftsByEmployee = {};
+    const shiftsByChild = {};
+    
+    allShifts.forEach(shift => {
+        // Group by employee
+        if (!shiftsByEmployee[shift.employee_id]) {
+            shiftsByEmployee[shift.employee_id] = [];
+        }
+        shiftsByEmployee[shift.employee_id].push(shift);
+        
+        // Group by child
+        if (!shiftsByChild[shift.child_id]) {
+            shiftsByChild[shift.child_id] = [];
+        }
+        shiftsByChild[shift.child_id].push(shift);
+    });
+    
+    // Check for employee overlaps (same employee, different children, overlapping times)
+    Object.entries(shiftsByEmployee).forEach(([employeeId, shifts]) => {
+        for (let i = 0; i < shifts.length - 1; i++) {
+            for (let j = i + 1; j < shifts.length; j++) {
+                const shift1 = shifts[i];
+                const shift2 = shifts[j];
+                
+                // Skip if same child
+                if (shift1.child_id === shift2.child_id) continue;
+                
+                // Check if dates and times overlap
+                if (shift1.date === shift2.date) {
+                    const overlap = this.calculateTimeOverlap(shift1, shift2);
+                    if (overlap) {
+                        overlaps.push({
+                            type: 'employee',
+                            employee_name: shift1.employee_name,
+                            shift1: shift1,
+                            shift2: shift2,
+                            overlap_duration: overlap
+                        });
+                    }
+                }
+            }
+        }
+    });
+    
+    // Check for child overlaps (same child, different employees, overlapping times)
+    Object.entries(shiftsByChild).forEach(([childId, shifts]) => {
+        for (let i = 0; i < shifts.length - 1; i++) {
+            for (let j = i + 1; j < shifts.length; j++) {
+                const shift1 = shifts[i];
+                const shift2 = shifts[j];
+                
+                // Skip if same employee
+                if (shift1.employee_id === shift2.employee_id) continue;
+                
+                // Check if dates and times overlap
+                if (shift1.date === shift2.date) {
+                    const overlap = this.calculateTimeOverlap(shift1, shift2);
+                    if (overlap) {
+                        overlaps.push({
+                            type: 'child',
+                            child_name: shift1.child_name,
+                            shift1: shift1,
+                            shift2: shift2,
+                            overlap_duration: overlap
+                        });
+                    }
+                }
+            }
+        }
+    });
+    
+    // Display the overlaps
+    this.renderOverlaps(overlaps);
+};
+
+App.prototype.calculateTimeOverlap = function(shift1, shift2) {
+    // Convert times to minutes for easier calculation
+    const start1 = this.timeToMinutes(shift1.start_time);
+    const end1 = this.timeToMinutes(shift1.end_time);
+    const start2 = this.timeToMinutes(shift2.start_time);
+    const end2 = this.timeToMinutes(shift2.end_time);
+    
+    // Calculate overlap
+    const overlapStart = Math.max(start1, start2);
+    const overlapEnd = Math.min(end1, end2);
+    
+    if (overlapStart < overlapEnd) {
+        const overlapMinutes = overlapEnd - overlapStart;
+        return this.minutesToDuration(overlapMinutes);
+    }
+    
+    return null;
+};
+
+App.prototype.timeToMinutes = function(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+};
+
+App.prototype.minutesToDuration = function(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}:${mins.toString().padStart(2, '0')}`;
+};
+
+App.prototype.renderOverlaps = function(overlaps) {
+    const container = document.getElementById('overlap-detection');
+    
+    if (overlaps.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    // Sort overlaps by date and then by type
+    overlaps.sort((a, b) => {
+        if (a.shift1.date !== b.shift1.date) {
+            return a.shift1.date.localeCompare(b.shift1.date);
+        }
+        return a.type.localeCompare(b.type);
+    });
+    
+    container.innerHTML = `
+        <div class="overlap-header">
+            <h3>⚠️ Overlapping Shifts Detected</h3>
+            <p class="overlap-description">The following shifts have time conflicts that need attention:</p>
+        </div>
+        <div class="overlap-list">
+            ${overlaps.map(overlap => {
+                if (overlap.type === 'employee') {
+                    return `
+                        <div class="overlap-item employee-overlap">
+                            <div class="overlap-type">Employee Conflict</div>
+                            <div class="overlap-details">
+                                <strong>${overlap.employee_name}</strong> is scheduled for multiple children on ${this.formatDate(overlap.shift1.date)}:
+                                <div class="shift-comparison">
+                                    <div class="shift-detail">
+                                        • ${overlap.shift1.child_name}: ${this.formatTime(overlap.shift1.start_time)} - ${this.formatTime(overlap.shift1.end_time)}
+                                    </div>
+                                    <div class="shift-detail">
+                                        • ${overlap.shift2.child_name}: ${this.formatTime(overlap.shift2.start_time)} - ${this.formatTime(overlap.shift2.end_time)}
+                                    </div>
+                                </div>
+                                <div class="overlap-duration">
+                                    <strong>Overlap duration:</strong> ${overlap.overlap_duration}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="overlap-item child-overlap">
+                            <div class="overlap-type">Child Conflict</div>
+                            <div class="overlap-details">
+                                <strong>${overlap.child_name}</strong> has multiple employees scheduled on ${this.formatDate(overlap.shift1.date)}:
+                                <div class="shift-comparison">
+                                    <div class="shift-detail">
+                                        • ${overlap.shift1.employee_name}: ${this.formatTime(overlap.shift1.start_time)} - ${this.formatTime(overlap.shift1.end_time)}
+                                    </div>
+                                    <div class="shift-detail">
+                                        • ${overlap.shift2.employee_name}: ${this.formatTime(overlap.shift2.start_time)} - ${this.formatTime(overlap.shift2.end_time)}
+                                    </div>
+                                </div>
+                                <div class="overlap-duration">
+                                    <strong>Overlap duration:</strong> ${overlap.overlap_duration}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('')}
+        </div>
+    `;
 };
