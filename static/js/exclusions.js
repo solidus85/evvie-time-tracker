@@ -16,17 +16,55 @@ App.prototype.loadExclusions = async function() {
     this.initExclusionsPagination();
     const exclusions = await this.api('/api/payroll/exclusions');
     
-    // Store all exclusions for pagination
-    this.exclusionsPagination.allExclusions = exclusions;
-    this.exclusionsPagination.totalItems = exclusions.length;
+    // Get current payroll period for filtering
+    let currentPeriodEnd = null;
+    try {
+        const currentPeriod = await this.api('/api/payroll/periods/current');
+        if (currentPeriod && currentPeriod.end_date) {
+            currentPeriodEnd = currentPeriod.end_date;
+        }
+    } catch (error) {
+        console.error('Could not fetch current period:', error);
+    }
     
-    // Reset to page 1 if current page is out of bounds
-    const totalPages = Math.ceil(exclusions.length / this.exclusionsPagination.itemsPerPage);
-    if (this.exclusionsPagination.currentPage > totalPages) {
-        this.exclusionsPagination.currentPage = 1;
+    // Store all exclusions and apply filter if checkbox is checked
+    this.exclusionsPagination.allExclusionsUnfiltered = exclusions;
+    this.exclusionsPagination.currentPeriodEnd = currentPeriodEnd;
+    this.applyExclusionsFilter();
+    
+    // Setup checkbox listener if not already done
+    const checkbox = document.getElementById('filter-future-exclusions');
+    if (checkbox && !checkbox.hasListener) {
+        checkbox.hasListener = true;
+        checkbox.addEventListener('change', () => {
+            this.applyExclusionsFilter();
+        });
     }
     
     this.renderExclusionsTable();
+};
+
+App.prototype.applyExclusionsFilter = function() {
+    const checkbox = document.getElementById('filter-future-exclusions');
+    const { allExclusionsUnfiltered, currentPeriodEnd } = this.exclusionsPagination;
+    
+    let filteredExclusions = allExclusionsUnfiltered;
+    
+    if (checkbox && checkbox.checked && currentPeriodEnd) {
+        // Filter out exclusions that start after the current period end
+        filteredExclusions = allExclusionsUnfiltered.filter(exc => {
+            return exc.start_date <= currentPeriodEnd;
+        });
+    }
+    
+    this.exclusionsPagination.allExclusions = filteredExclusions;
+    this.exclusionsPagination.totalItems = filteredExclusions.length;
+    
+    // Reset to page 1 if current page is out of bounds
+    const totalPages = Math.ceil(filteredExclusions.length / this.exclusionsPagination.itemsPerPage);
+    if (this.exclusionsPagination.currentPage > totalPages) {
+        this.exclusionsPagination.currentPage = 1;
+    }
 };
 
 App.prototype.renderExclusionsTable = function() {
