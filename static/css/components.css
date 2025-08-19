@@ -70,6 +70,17 @@
     box-shadow: 0 2px 4px var(--shadow);
 }
 
+.btn-view {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-view:hover {
+    background: var(--success-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
 .btn-delete {
     background: var(--danger-color);
     color: white;
