@@ -20,7 +20,7 @@
 
 .btn-secondary {
     padding: 8px 16px;
-    background: var(--text-secondary);
+    background: #495057;
     color: white;
     border: none;
     border-radius: 4px;
@@ -30,7 +30,7 @@
 }
 
 .btn-secondary:hover {
-    background: var(--text-muted);
+    background: #343a40;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px var(--shadow);
 }
