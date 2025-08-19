@@ -461,9 +461,9 @@ class ShiftService:
                                     if remaining_hours > 0:
                                         # Calculate adjusted end time to fit within remaining hours
                                         # Convert to minutes for easier calculation
-                                        remaining_minutes = int(remaining_hours * 60)
-                                        # Round down to nearest 15 minutes
-                                        remaining_minutes = (remaining_minutes // 15) * 15
+                                        remaining_minutes = round(remaining_hours * 60)
+                                        # Round to nearest 15 minutes (can round up if it fits exactly)
+                                        remaining_minutes = round(remaining_minutes / 15) * 15
                                         
                                         if remaining_minutes >= 15:  # At least 15 minutes available
                                             # Calculate new end time
@@ -599,9 +599,9 @@ class ShiftService:
                                 if remaining_hours > 0:
                                     # Calculate adjusted end time to fit within remaining hours
                                     # Convert to minutes for easier calculation
-                                    remaining_minutes = int(remaining_hours * 60)
-                                    # Round down to nearest 15 minutes
-                                    remaining_minutes = (remaining_minutes // 15) * 15
+                                    remaining_minutes = round(remaining_hours * 60)
+                                    # Round to nearest 15 minutes (can round up if it fits exactly)
+                                    remaining_minutes = round(remaining_minutes / 15) * 15
                                     
                                     if remaining_minutes >= 15:  # At least 15 minutes available
                                         # Calculate new end time
