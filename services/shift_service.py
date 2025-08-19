@@ -429,12 +429,74 @@ class ShiftService:
                         )
                         
                         if hour_limit_warning and 'exceeds weekly limit' in hour_limit_warning:
-                            # Stop generating shifts if we hit the hard limit
+                            # Calculate remaining hours available before hitting the limit
+                            limit = self.config_service.get_hour_limit(employee_id, child_id)
+                            if limit:
+                                period = self.payroll_service.get_period_for_date(date)
+                                if period:
+                                    # Determine which week this shift falls into
+                                    period_start = datetime.strptime(period['start_date'], "%Y-%m-%d")
+                                    shift_date = datetime.strptime(date, "%Y-%m-%d")
+                                    days_from_start = (shift_date - period_start).days
+                                    week_number = 1 if days_from_start < 7 else 2
+                                    
+                                    # Calculate week boundaries
+                                    if week_number == 1:
+                                        week_start = period['start_date']
+                                        week_end_date = period_start + timedelta(days=6)
+                                        week_end = week_end_date.strftime("%Y-%m-%d")
+                                    else:
+                                        week_start_date = period_start + timedelta(days=7)
+                                        week_start = week_start_date.strftime("%Y-%m-%d")
+                                        week_end = period['end_date']
+                                    
+                                    # Calculate existing hours
+                                    existing_hours = self.calculate_period_hours(
+                                        employee_id, child_id, week_start, week_end, None
+                                    )
+                                    
+                                    # Calculate remaining hours available
+                                    remaining_hours = limit['max_hours_per_week'] - existing_hours
+                                    
+                                    if remaining_hours > 0:
+                                        # Calculate adjusted end time to fit within remaining hours
+                                        # Convert to minutes for easier calculation
+                                        remaining_minutes = int(remaining_hours * 60)
+                                        # Round down to nearest 15 minutes
+                                        remaining_minutes = (remaining_minutes // 15) * 15
+                                        
+                                        if remaining_minutes >= 15:  # At least 15 minutes available
+                                            # Calculate new end time
+                                            start_minutes = current_time.hour * 60 + current_time.minute
+                                            end_minutes = start_minutes + remaining_minutes
+                                            
+                                            # Don't exceed the original end time or day boundary
+                                            original_end_minutes = end_time.hour * 60 + end_time.minute
+                                            end_minutes = min(end_minutes, original_end_minutes, 23 * 60 + 45)
+                                            
+                                            adjusted_end_time = time(end_minutes // 60, end_minutes % 60, 0)
+                                            
+                                            # Create the truncated shift
+                                            shift_id = self.create(
+                                                employee_id=employee_id,
+                                                child_id=child_id,
+                                                date=date,
+                                                start_time=current_time.strftime('%H:%M:%S'),
+                                                end_time=adjusted_end_time.strftime('%H:%M:%S'),
+                                                status='auto-generated'
+                                            )
+                                            created_shifts.append({
+                                                'id': shift_id,
+                                                'start_time': current_time.strftime('%H:%M:%S'),
+                                                'end_time': adjusted_end_time.strftime('%H:%M:%S')
+                                            })
+                                            skipped_reasons.append(f"Created partial shift ({remaining_hours:.2f} hours) to stay within weekly limit")
+                            
+                            # Stop generating shifts after hitting the limit
                             hit_hour_limit = True
-                            skipped_reasons.append(f"Stopped: {hour_limit_warning}")
                             break
                         
-                        # Create the shift
+                        # Create the full shift if no hour limit issues
                         shift_id = self.create(
                             employee_id=employee_id,
                             child_id=child_id,
@@ -505,7 +567,74 @@ class ShiftService:
                             'end_time': day_end.strftime('%H:%M:%S')
                         })
                     else:
-                        skipped_reasons.append(f"Stopped: {hour_limit_warning}")
+                        # Try to create a partial shift within the remaining hours
+                        limit = self.config_service.get_hour_limit(employee_id, child_id)
+                        if limit:
+                            period = self.payroll_service.get_period_for_date(date)
+                            if period:
+                                # Determine which week this shift falls into
+                                period_start = datetime.strptime(period['start_date'], "%Y-%m-%d")
+                                shift_date = datetime.strptime(date, "%Y-%m-%d")
+                                days_from_start = (shift_date - period_start).days
+                                week_number = 1 if days_from_start < 7 else 2
+                                
+                                # Calculate week boundaries
+                                if week_number == 1:
+                                    week_start = period['start_date']
+                                    week_end_date = period_start + timedelta(days=6)
+                                    week_end = week_end_date.strftime("%Y-%m-%d")
+                                else:
+                                    week_start_date = period_start + timedelta(days=7)
+                                    week_start = week_start_date.strftime("%Y-%m-%d")
+                                    week_end = period['end_date']
+                                
+                                # Calculate existing hours
+                                existing_hours = self.calculate_period_hours(
+                                    employee_id, child_id, week_start, week_end, None
+                                )
+                                
+                                # Calculate remaining hours available
+                                remaining_hours = limit['max_hours_per_week'] - existing_hours
+                                
+                                if remaining_hours > 0:
+                                    # Calculate adjusted end time to fit within remaining hours
+                                    # Convert to minutes for easier calculation
+                                    remaining_minutes = int(remaining_hours * 60)
+                                    # Round down to nearest 15 minutes
+                                    remaining_minutes = (remaining_minutes // 15) * 15
+                                    
+                                    if remaining_minutes >= 15:  # At least 15 minutes available
+                                        # Calculate new end time
+                                        start_minutes = current_time.hour * 60 + current_time.minute
+                                        end_minutes = start_minutes + remaining_minutes
+                                        
+                                        # Don't exceed the original end time or day boundary
+                                        original_end_minutes = day_end.hour * 60 + day_end.minute
+                                        end_minutes = min(end_minutes, original_end_minutes, 23 * 60 + 45)
+                                        
+                                        adjusted_end_time = time(end_minutes // 60, end_minutes % 60, 0)
+                                        
+                                        # Create the truncated shift
+                                        shift_id = self.create(
+                                            employee_id=employee_id,
+                                            child_id=child_id,
+                                            date=date,
+                                            start_time=current_time.strftime('%H:%M:%S'),
+                                            end_time=adjusted_end_time.strftime('%H:%M:%S'),
+                                            status='auto-generated'
+                                        )
+                                        created_shifts.append({
+                                            'id': shift_id,
+                                            'start_time': current_time.strftime('%H:%M:%S'),
+                                            'end_time': adjusted_end_time.strftime('%H:%M:%S')
+                                        })
+                                        skipped_reasons.append(f"Created partial shift ({remaining_hours:.2f} hours) to stay within weekly limit")
+                                    else:
+                                        skipped_reasons.append(f"Stopped: {hour_limit_warning}")
+                                else:
+                                    skipped_reasons.append(f"Stopped: {hour_limit_warning}")
+                        else:
+                            skipped_reasons.append(f"Stopped: {hour_limit_warning}")
                 except ValueError as e:
                     skipped_reasons.append(f"Skipped {current_time.strftime('%H:%M')}-{day_end.strftime('%H:%M')}: {str(e)}")
         
