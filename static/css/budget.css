@@ -5,7 +5,7 @@
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 0;
 }
 
@@ -17,17 +17,17 @@
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
-    color: #666;
+    color: var(--text-secondary);
     transition: all 0.3s ease;
 }
 
 .budget-tabs .tab-btn:hover {
-    color: #3498db;
+    color: var(--primary-color);
 }
 
 .budget-tabs .tab-btn.active {
-    color: #3498db;
-    border-bottom-color: #3498db;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
 }
 
 #budget-view .tab-content {
@@ -46,17 +46,17 @@
 
 /* Form containers */
 .form-container {
-    background: #f8f9fa;
+    background: var(--bg-hover);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .form-container h3 {
     margin: 0 0 20px 0;
-    color: #2c3e50;
-    border-bottom: 2px solid #3498db;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--primary-color);
     padding-bottom: 10px;
 }
 
@@ -70,24 +70,26 @@
     flex-direction: column;
     gap: 5px;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .form-container input,
 .form-container select,
 .form-container textarea {
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 14px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .form-container input:focus,
 .form-container select:focus,
 .form-container textarea:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
 }
 
 .form-buttons {
@@ -120,8 +122,10 @@
 .allocation-controls select,
 .utilization-controls input {
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 /* Tables */
@@ -131,8 +135,8 @@
 #utilization-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: var(--bg-secondary);
+    box-shadow: 0 1px 3px var(--shadow);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -141,8 +145,8 @@
 #rates-table thead,
 #allocations-table thead,
 #utilization-table thead {
-    background: #34495e;
-    color: white;
+    background: var(--header-bg);
+    color: var(--header-text);
 }
 
 #budgets-table th,
@@ -159,14 +163,15 @@
 #allocations-table td,
 #utilization-table td {
     padding: 12px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
 }
 
 #budgets-table tbody tr:hover,
 #rates-table tbody tr:hover,
 #allocations-table tbody tr:hover,
 #utilization-table tbody tr:hover {
-    background: #f8f9fa;
+    background: var(--bg-hover);
 }
 
 #budgets-table tbody tr:last-child td,
@@ -217,15 +222,15 @@
 }
 
 #utilization-table tr td:last-child:contains("High") {
-    color: #e74c3c;
+    color: var(--danger-color);
 }
 
 #utilization-table tr td:last-child:contains("Medium") {
-    color: #f39c12;
+    color: var(--warning-color);
 }
 
 #utilization-table tr td:last-child:contains("Normal") {
-    color: #27ae60;
+    color: var(--success-color);
 }
 
 /* Button styles specific to budget module */
@@ -240,23 +245,23 @@
 }
 
 #budget-view .btn-primary {
-    background: #3498db;
+    background: var(--primary-color);
     color: white;
 }
 
 #budget-view .btn-primary:hover {
-    background: #2980b9;
+    background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 6px var(--shadow-hover);
 }
 
 #budget-view .btn-secondary {
-    background: #95a5a6;
+    background: var(--text-secondary);
     color: white;
 }
 
 #budget-view .btn-secondary:hover {
-    background: #7f8c8d;
+    background: var(--text-muted);
 }
 
 /* Action buttons in tables */
@@ -276,8 +281,9 @@
 #budget-view tbody tr td[colspan] {
     text-align: center;
     padding: 30px;
-    color: #999;
+    color: var(--text-muted);
     font-style: italic;
+    background: var(--bg-hover);
 }
 
 /* Responsive design */
@@ -328,22 +334,22 @@
 .report-details {
     margin-top: 30px;
     padding: 20px;
-    background: #f8f9fa;
+    background: var(--bg-hover);
     border-radius: 8px;
 }
 
 .report-detail-card {
-    background: white;
+    background: var(--bg-secondary);
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px var(--shadow);
 }
 
 .report-detail-card h4 {
     margin: 0 0 15px 0;
-    color: #2c3e50;
-    border-bottom: 2px solid #3498db;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--primary-color);
     padding-bottom: 5px;
 }
 
@@ -358,17 +364,19 @@
 }
 
 .detail-table th {
-    background: #ecf0f1;
+    background: var(--bg-hover);
     padding: 8px;
     text-align: left;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .detail-table td {
     padding: 8px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
 }
 
 .detail-table tr:hover {
-    background: #f8f9fa;
+    background: var(--bg-hover);
 }
