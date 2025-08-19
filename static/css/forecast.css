@@ -5,35 +5,35 @@
     margin-bottom: 20px;
 }
 
-/* Tab buttons styling */
+/* Tab buttons styling - matching budget page */
 .forecast-tabs {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 10px;
+    padding-bottom: 0;
 }
 
 .forecast-tabs .tab-btn {
     padding: 10px 20px;
-    background: var(--bg-hover);
+    background: transparent;
     border: none;
-    border-radius: 5px 5px 0 0;
+    border-bottom: 3px solid transparent;
     cursor: pointer;
     transition: all 0.3s;
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--text-secondary);
+    margin-bottom: -2px;
 }
 
 .forecast-tabs .tab-btn:hover {
-    background: var(--primary-color);
-    color: white;
+    color: var(--primary-color);
 }
 
 .forecast-tabs .tab-btn.active {
-    background: var(--primary-color);
-    color: white;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
 }
 
 #forecast-view .tab-content {
@@ -386,4 +386,16 @@
 .recommendation-table button {
     padding: 4px 12px;
     font-size: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .forecast-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .forecast-tabs .tab-btn {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
 }
