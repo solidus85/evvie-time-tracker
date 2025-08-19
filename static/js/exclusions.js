@@ -78,8 +78,8 @@ App.prototype.renderExclusionsTable = function() {
     
     // Render table rows
     document.querySelector('#exclusions-table tbody').innerHTML = paginatedExclusions.map(exc => {
-        const startDateTime = exc.start_time ? `${exc.start_date} ${this.formatTime(exc.start_time)}` : exc.start_date;
-        const endDateTime = exc.end_time ? `${exc.end_date} ${this.formatTime(exc.end_time)}` : exc.end_date;
+        const startDateTime = this.formatDateTimeShort(exc.start_date, exc.start_time);
+        const endDateTime = this.formatDateTimeShort(exc.end_date, exc.end_time);
         
         let targetInfo = 'General';
         if (exc.employee_name) {
@@ -95,9 +95,21 @@ App.prototype.renderExclusionsTable = function() {
             <td>${startDateTime}</td>
             <td>${endDateTime}</td>
             <td>${exc.reason || 'N/A'}</td>
-            <td>
-                <button onclick="app.editExclusion(${exc.id})" class="btn-primary">Edit</button>
-                <button onclick="app.deleteExclusion(${exc.id})" class="btn-secondary">Delete</button>
+            <td class="action-buttons">
+                <button onclick="app.editExclusion(${exc.id})" class="btn-icon btn-edit" title="Edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <button onclick="app.deleteExclusion(${exc.id})" class="btn-icon btn-delete" title="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
             </td>
         </tr>
     `}).join('');

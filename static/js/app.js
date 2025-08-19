@@ -212,6 +212,23 @@ class App {
         const displayHour = hour % 12 || 12;
         return `${displayHour}:${minutes} ${ampm}`;
     }
+    
+    formatDateTimeShort(dateStr, timeStr = null) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        let result = `${month}/${day}`;
+        
+        if (timeStr) {
+            const [hours, minutes] = timeStr.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'pm' : 'am';
+            const displayHour = hour % 12 || 12;
+            result += ` ${String(displayHour).padStart(2, '0')}:${minutes} ${ampm}`;
+        }
+        
+        return result;
+    }
 
     calculateShiftHours(startTime, endTime) {
         const [startHours, startMinutes] = startTime.split(':').map(Number);
