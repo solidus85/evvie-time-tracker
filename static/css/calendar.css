@@ -37,41 +37,42 @@
     position: absolute;
     top: 5px;
     right: 5px;
-    width: 20px;
-    height: 20px;
+    padding: 4px 8px;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 4px;
     cursor: pointer;
+    transition: all 0.3s;
     font-size: 12px;
-    line-height: 1;
+    font-weight: 500;
 }
 
 .day-add-btn:hover {
     background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .day-auto-btn {
     position: absolute;
     top: 5px;
-    right: 30px;
-    width: 20px;
-    height: 20px;
-    background: #9b59b6;
+    right: 35px;
+    padding: 4px 8px;
+    background: var(--text-secondary);
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 4px;
     cursor: pointer;
+    transition: all 0.3s;
     font-size: 12px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: 500;
 }
 
 .day-auto-btn:hover {
-    background: #8e44ad;
+    background: var(--text-muted);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 /* Shift entries */
