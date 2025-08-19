@@ -319,6 +319,28 @@ class ShiftService:
                                            day_start.strftime('%H:%M:%S'), 
                                            day_end.strftime('%H:%M:%S'))
         
+        # Check for employee-specific exclusions that would block the entire day
+        employee_blocked_periods = []
+        for exc in exclusions:
+            # Check if this exclusion applies to the specific employee
+            if exc['employee_id'] and int(exc['employee_id']) == int(employee_id):
+                if exc['start_time'] and exc['end_time']:
+                    # Time-specific exclusion for this employee
+                    start = exc['start_time']
+                    end = exc['end_time']
+                    if isinstance(start, str):
+                        start = datetime.strptime(start, '%H:%M:%S').time()
+                    if isinstance(end, str):
+                        end = datetime.strptime(end, '%H:%M:%S').time()
+                    employee_blocked_periods.append({
+                        'start': round_down_to_15(start),
+                        'end': round_up_to_15(end),
+                        'reason': f"Employee excluded: {exc['name']}"
+                    })
+                else:
+                    # Full day exclusion for this employee
+                    return {'created': 0, 'message': f"Employee is excluded for the entire day: {exc['name']}"}
+        
         # Build list of blocked time periods for the child
         blocked_periods = []
         for shift in existing_shifts:
@@ -336,35 +358,44 @@ class ShiftService:
                 'end': round_up_to_15(end)
             })
         
-        # Add exclusion periods if they have time constraints
+        # Add child-specific exclusion periods if they have time constraints
         for exc in exclusions:
-            if exc['start_time'] and exc['end_time']:
-                start = exc['start_time']
-                end = exc['end_time']
-                if isinstance(start, str):
-                    start = datetime.strptime(start, '%H:%M:%S').time()
-                if isinstance(end, str):
-                    end = datetime.strptime(end, '%H:%M:%S').time()
-                # Round exclusions to 15-minute boundaries too
-                blocked_periods.append({
-                    'start': round_down_to_15(start),
-                    'end': round_up_to_15(end)
-                })
-            elif not exc['start_time'] and not exc['end_time']:
-                # Full day exclusion
-                return {'created': 0, 'message': 'Full day exclusion exists'}
+            # Only add child-specific exclusions to blocked periods (not employee exclusions)
+            if exc['child_id'] and int(exc['child_id']) == int(child_id):
+                if exc['start_time'] and exc['end_time']:
+                    start = exc['start_time']
+                    end = exc['end_time']
+                    if isinstance(start, str):
+                        start = datetime.strptime(start, '%H:%M:%S').time()
+                    if isinstance(end, str):
+                        end = datetime.strptime(end, '%H:%M:%S').time()
+                    # Round exclusions to 15-minute boundaries too
+                    blocked_periods.append({
+                        'start': round_down_to_15(start),
+                        'end': round_up_to_15(end)
+                    })
+                elif not exc['start_time'] and not exc['end_time']:
+                    # Full day exclusion for child
+                    return {'created': 0, 'message': f"Child is excluded for the entire day: {exc['name']}"}
         
-        # Sort blocked periods by start time
-        blocked_periods.sort(key=lambda x: x['start'])
+        # Combine employee-specific blocked periods with child blocked periods
+        all_blocked_periods = blocked_periods + employee_blocked_periods
+        
+        # Sort all blocked periods by start time
+        all_blocked_periods.sort(key=lambda x: x['start'])
         
         # Find free periods and generate shifts
         created_shifts = []
+        skipped_reasons = []
         current_time = day_start
         
-        for period in blocked_periods:
+        # Track whether we've hit hour limits
+        hit_hour_limit = False
+        
+        for period in all_blocked_periods:
             period_start = period['start']
             
-            # If there's a gap before this period, create a shift
+            # If there's a gap before this period, try to create a shift
             if current_time < period_start:
                 # Round down to nearest 15 minutes for end time
                 end_time = period_start
@@ -378,27 +409,59 @@ class ShiftService:
                 )
                 
                 if not employee_conflict:
-                    # Create the shift
-                    shift_id = self.create(
-                        employee_id=employee_id,
-                        child_id=child_id,
-                        date=date,
-                        start_time=current_time.strftime('%H:%M:%S'),
-                        end_time=end_time.strftime('%H:%M:%S'),
-                        status='auto-generated'
-                    )
-                    created_shifts.append({
-                        'id': shift_id,
-                        'start_time': current_time.strftime('%H:%M:%S'),
-                        'end_time': end_time.strftime('%H:%M:%S')
-                    })
+                    # Validate the shift (check hour limits)
+                    try:
+                        warnings = self.validate_shift(
+                            employee_id=employee_id,
+                            child_id=child_id,
+                            date=date,
+                            start_time=current_time.strftime('%H:%M:%S'),
+                            end_time=end_time.strftime('%H:%M:%S')
+                        )
+                        
+                        # Check if hour limit would be exceeded
+                        hour_limit_warning = self.check_hour_limits(
+                            employee_id=employee_id,
+                            child_id=child_id,
+                            date=date,
+                            start_time=current_time.strftime('%H:%M:%S'),
+                            end_time=end_time.strftime('%H:%M:%S')
+                        )
+                        
+                        if hour_limit_warning and 'exceeds weekly limit' in hour_limit_warning:
+                            # Stop generating shifts if we hit the hard limit
+                            hit_hour_limit = True
+                            skipped_reasons.append(f"Stopped: {hour_limit_warning}")
+                            break
+                        
+                        # Create the shift
+                        shift_id = self.create(
+                            employee_id=employee_id,
+                            child_id=child_id,
+                            date=date,
+                            start_time=current_time.strftime('%H:%M:%S'),
+                            end_time=end_time.strftime('%H:%M:%S'),
+                            status='auto-generated'
+                        )
+                        created_shifts.append({
+                            'id': shift_id,
+                            'start_time': current_time.strftime('%H:%M:%S'),
+                            'end_time': end_time.strftime('%H:%M:%S')
+                        })
+                    except ValueError as e:
+                        # Skip this shift due to validation error
+                        skipped_reasons.append(f"Skipped {current_time.strftime('%H:%M')}-{end_time.strftime('%H:%M')}: {str(e)}")
             
             # Update current time to after this period (already rounded)
             period_end = period['end']
             current_time = period_end
+            
+            # Add reason if this was an employee-specific exclusion
+            if 'reason' in period:
+                skipped_reasons.append(f"Blocked {period['start'].strftime('%H:%M')}-{period['end'].strftime('%H:%M')}: {period['reason']}")
         
-        # Handle remaining time after last blocked period
-        if current_time < day_end:
+        # Handle remaining time after last blocked period (if we haven't hit hour limit)
+        if current_time < day_end and not hit_hour_limit:
             # Check for employee conflicts
             employee_conflict = self.db.fetchone(
                 """SELECT * FROM shifts 
@@ -408,24 +471,58 @@ class ShiftService:
             )
             
             if not employee_conflict:
-                shift_id = self.create(
-                    employee_id=employee_id,
-                    child_id=child_id,
-                    date=date,
-                    start_time=current_time.strftime('%H:%M:%S'),
-                    end_time=day_end.strftime('%H:%M:%S'),
-                    status='auto-generated'
-                )
-                created_shifts.append({
-                    'id': shift_id,
-                    'start_time': current_time.strftime('%H:%M:%S'),
-                    'end_time': day_end.strftime('%H:%M:%S')
-                })
+                # Validate the shift
+                try:
+                    warnings = self.validate_shift(
+                        employee_id=employee_id,
+                        child_id=child_id,
+                        date=date,
+                        start_time=current_time.strftime('%H:%M:%S'),
+                        end_time=day_end.strftime('%H:%M:%S')
+                    )
+                    
+                    # Check if hour limit would be exceeded
+                    hour_limit_warning = self.check_hour_limits(
+                        employee_id=employee_id,
+                        child_id=child_id,
+                        date=date,
+                        start_time=current_time.strftime('%H:%M:%S'),
+                        end_time=day_end.strftime('%H:%M:%S')
+                    )
+                    
+                    if not (hour_limit_warning and 'exceeds weekly limit' in hour_limit_warning):
+                        shift_id = self.create(
+                            employee_id=employee_id,
+                            child_id=child_id,
+                            date=date,
+                            start_time=current_time.strftime('%H:%M:%S'),
+                            end_time=day_end.strftime('%H:%M:%S'),
+                            status='auto-generated'
+                        )
+                        created_shifts.append({
+                            'id': shift_id,
+                            'start_time': current_time.strftime('%H:%M:%S'),
+                            'end_time': day_end.strftime('%H:%M:%S')
+                        })
+                    else:
+                        skipped_reasons.append(f"Stopped: {hour_limit_warning}")
+                except ValueError as e:
+                    skipped_reasons.append(f"Skipped {current_time.strftime('%H:%M')}-{day_end.strftime('%H:%M')}: {str(e)}")
         
-        return {
+        result = {
             'created': len(created_shifts),
             'shifts': created_shifts
         }
+        
+        # Add detailed message about what happened
+        if skipped_reasons:
+            result['skipped_reasons'] = skipped_reasons
+            if created_shifts:
+                result['message'] = f"Created {len(created_shifts)} shift(s). Some periods were skipped."
+            else:
+                result['message'] = "No shifts could be created due to conflicts or limits."
+        
+        return result
     
     def delete(self, shift_id):
         shift = self.get_by_id(shift_id)

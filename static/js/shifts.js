@@ -188,10 +188,40 @@ App.prototype.showAutoGenerateForm = async function(date) {
                 body: JSON.stringify(data)
             });
             
+            // Show main result message
             if (result.created > 0) {
-                this.showToast(`Generated ${result.created} shift(s) successfully`);
+                let message = `Generated ${result.created} shift(s) successfully`;
+                
+                // Add details about skipped periods if any
+                if (result.skipped_reasons && result.skipped_reasons.length > 0) {
+                    message += '\n\nNote: Some periods were skipped:';
+                    // Show first few reasons to avoid overwhelming the user
+                    const reasonsToShow = result.skipped_reasons.slice(0, 3);
+                    reasonsToShow.forEach(reason => {
+                        message += '\n• ' + reason;
+                    });
+                    if (result.skipped_reasons.length > 3) {
+                        message += `\n• ...and ${result.skipped_reasons.length - 3} more`;
+                    }
+                }
+                
+                this.showToast(message, 'success');
             } else if (result.message) {
-                this.showToast(result.message, 'warning');
+                let message = result.message;
+                
+                // Add details about why shifts couldn't be created
+                if (result.skipped_reasons && result.skipped_reasons.length > 0) {
+                    message += '\n\nReasons:';
+                    const reasonsToShow = result.skipped_reasons.slice(0, 3);
+                    reasonsToShow.forEach(reason => {
+                        message += '\n• ' + reason;
+                    });
+                    if (result.skipped_reasons.length > 3) {
+                        message += `\n• ...and ${result.skipped_reasons.length - 3} more`;
+                    }
+                }
+                
+                this.showToast(message, 'warning');
             } else {
                 this.showToast('No free periods available for shifts', 'warning');
             }
