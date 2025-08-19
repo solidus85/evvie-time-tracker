@@ -1,0 +1,80 @@
+/* Dark mode toggle button styles */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 60px;
+}
+
+.theme-toggle:hover {
+    box-shadow: 0 4px 12px var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.theme-toggle-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--text-primary);
+}
+
+/* Sun icon (light mode) */
+.theme-toggle .sun-icon {
+    display: block;
+}
+
+.theme-toggle .moon-icon {
+    display: none;
+}
+
+/* Moon icon (dark mode) */
+[data-theme="dark"] .theme-toggle .sun-icon {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle .moon-icon {
+    display: block;
+}
+
+/* Rotate animation on toggle */
+.theme-toggle.animating .theme-toggle-icon {
+    transform: rotate(360deg);
+}
+
+/* Tooltip */
+.theme-toggle::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -35px;
+    right: 0;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.theme-toggle:hover::after {
+    opacity: 1;
+}

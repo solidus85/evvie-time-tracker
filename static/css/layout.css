@@ -1,15 +1,15 @@
 /* Layout and navigation */
 header {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 header h1 {
     margin-bottom: 15px;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 nav {
@@ -19,28 +19,32 @@ nav {
 
 .nav-btn {
     padding: 8px 16px;
-    background: #ecf0f1;
-    border: none;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s;
+    color: var(--text-primary);
 }
 
 .nav-btn:hover {
-    background: #bdc3c7;
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 .nav-btn.active {
-    background: #3498db;
+    background: var(--primary-color);
     color: white;
+    border-color: var(--primary-color);
 }
 
 .view {
     display: none;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .view.active {
@@ -64,18 +68,19 @@ nav {
 
 .child-selector label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .child-selector select {
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    background: white;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     cursor: pointer;
     font-size: 14px;
 }
 
 .child-selector select:hover {
-    border-color: #3498db;
+    border-color: var(--primary-color);
 }

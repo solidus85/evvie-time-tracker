@@ -3,29 +3,29 @@
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 1px;
-    background: #ddd;
-    border: 1px solid #ddd;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
     margin-bottom: 20px;
     width: 100%;
 }
 
 .calendar-header {
-    background: #34495e;
-    color: white;
+    background: var(--header-bg);
+    color: var(--header-text);
     padding: 10px;
     text-align: center;
     font-weight: bold;
 }
 
 .calendar-day {
-    background: white;
+    background: var(--bg-secondary);
     min-height: 120px;
     padding: 5px;
     position: relative;
 }
 
 .calendar-day.weekend {
-    background: #f8f9fa;
+    background: var(--weekend-bg);
 }
 
 .day-number {
@@ -39,13 +39,17 @@
     right: 5px;
     width: 20px;
     height: 20px;
-    background: #3498db;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 50%;
     cursor: pointer;
     font-size: 12px;
     line-height: 1;
+}
+
+.day-add-btn:hover {
+    background: var(--primary-hover);
 }
 
 .day-auto-btn {
@@ -72,7 +76,7 @@
 
 /* Shift entries */
 .shift-entry {
-    background: #e8f4f8;
+    background: var(--bg-hover);
     padding: 4px 6px;
     margin: 3px 0;
     border-radius: 3px;
@@ -81,39 +85,42 @@
     white-space: normal;
     line-height: 1.4;
     word-break: break-word;
+    border: 1px solid var(--border-light);
 }
 
 .shift-entry .shift-time {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .shift-entry .shift-employee {
-    color: #7f8c8d;
+    color: var(--text-secondary);
     font-size: 10px;
 }
 
 .shift-entry.parent-paid {
-    background: #e3f2fd;
+    background: var(--parent-paid-bg);
 }
 
 .shift-entry.parent-paid.imported {
-    background: #e1f5fe;
-    border-left: 3px solid #64b5f6;
+    background: var(--imported-bg);
+    border-left: 3px solid var(--primary-color);
 }
 
 .shift-entry.imported {
-    background: #f0f0f0;
-    border-left: 3px solid #95a5a6;
+    background: var(--bg-hover);
+    border-left: 3px solid var(--text-muted);
 }
 
 .shift-entry:hover {
-    background: #d0e9f2;
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 /* Exclusion entries in calendar */
 .exclusion-entry {
-    background: #ffcccc;
+    background: var(--exclusion-bg);
     padding: 4px 6px;
     margin: 3px 0;
     border-radius: 3px;
@@ -122,21 +129,21 @@
     white-space: normal;
     line-height: 1.4;
     word-break: break-word;
-    border-left: 3px solid #d32f2f;
+    border-left: 3px solid var(--danger-color);
 }
 
 .exclusion-entry .exclusion-label {
     font-weight: 600;
-    color: #b71c1c;
+    color: var(--danger-color);
 }
 
 .exclusion-entry .exclusion-name {
-    color: #d32f2f;
+    color: var(--text-secondary);
     font-size: 10px;
 }
 
 .exclusion-entry:hover {
-    background: #ffb3b3;
+    opacity: 0.8;
 }
 
 /* Overlap detection section */
@@ -150,8 +157,8 @@
 }
 
 .overlap-header {
-    background: #fff3e0;
-    border: 1px solid #ffcc80;
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-color);
     border-radius: 8px 8px 0 0;
     padding: 15px;
     border-bottom: none;
@@ -159,29 +166,29 @@
 
 .overlap-header h3 {
     margin: 0 0 5px 0;
-    color: #e65100;
+    color: var(--warning-color);
     font-size: 18px;
 }
 
 .overlap-description {
     margin: 0;
-    color: #bf360c;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .overlap-list {
-    border: 1px solid #ffcc80;
+    border: 1px solid var(--warning-color);
     border-top: none;
     border-radius: 0 0 8px 8px;
     padding: 15px;
-    background: #fff;
+    background: var(--bg-secondary);
 }
 
 .overlap-item {
     margin-bottom: 20px;
     padding: 15px;
     border-radius: 6px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
 }
 
 .overlap-item:last-child {
@@ -189,18 +196,18 @@
 }
 
 .overlap-item.employee-overlap {
-    background: #fce4ec;
-    border-color: #f8bbd0;
+    background: var(--overlap-employee-bg);
+    border-color: var(--danger-color);
 }
 
 .overlap-item.child-overlap {
-    background: #e8f5e9;
-    border-color: #a5d6a7;
+    background: var(--overlap-child-bg);
+    border-color: var(--primary-color);
 }
 
 .overlap-type {
     font-weight: bold;
-    color: #666;
+    color: var(--text-secondary);
     font-size: 12px;
     text-transform: uppercase;
     margin-bottom: 8px;
@@ -208,11 +215,11 @@
 }
 
 .employee-overlap .overlap-type {
-    color: #c2185b;
+    color: var(--danger-color);
 }
 
 .child-overlap .overlap-type {
-    color: #388e3c;
+    color: var(--success-color);
 }
 
 .overlap-details {
@@ -221,29 +228,29 @@
 }
 
 .overlap-details strong {
-    color: #333;
+    color: var(--text-primary);
 }
 
 .shift-comparison {
     margin: 10px 0;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--bg-hover);
     border-radius: 4px;
 }
 
 .shift-detail {
     margin: 5px 0;
     padding-left: 10px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .overlap-duration {
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid var(--border-light);
     font-size: 14px;
 }
 
 .overlap-duration strong {
-    color: #d32f2f;
+    color: var(--danger-color);
 }

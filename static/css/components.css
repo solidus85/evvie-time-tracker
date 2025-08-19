@@ -3,7 +3,7 @@
 /* Buttons */
 .btn-primary {
     padding: 8px 16px;
-    background: #3498db;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 4px;
@@ -12,12 +12,12 @@
 }
 
 .btn-primary:hover {
-    background: #2980b9;
+    background: var(--primary-hover);
 }
 
 .btn-secondary {
     padding: 8px 16px;
-    background: #95a5a6;
+    background: var(--text-secondary);
     color: white;
     border: none;
     border-radius: 4px;
@@ -26,7 +26,7 @@
 }
 
 .btn-secondary:hover {
-    background: #7f8c8d;
+    background: var(--text-muted);
 }
 
 /* Modal */
@@ -38,7 +38,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: var(--modal-overlay);
 }
 
 .modal.show {
@@ -46,13 +46,14 @@
 }
 
 .modal-content {
-    background: white;
+    background: var(--bg-secondary);
     margin: 10% auto;
     padding: 20px;
     width: 90%;
     max-width: 500px;
     border-radius: 8px;
     position: relative;
+    border: 1px solid var(--border-color);
 }
 
 .close {
@@ -62,11 +63,11 @@
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    color: #aaa;
+    color: var(--text-muted);
 }
 
 .close:hover {
-    color: #000;
+    color: var(--text-primary);
 }
 
 /* Forms */
@@ -83,8 +84,10 @@
 .form-group input, .form-group select {
     width: 100%;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 /* Toast notifications */
