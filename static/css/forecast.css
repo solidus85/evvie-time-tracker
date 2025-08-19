@@ -1,10 +1,5 @@
 /* Forecast management styles */
 
-/* Header spacing */
-#forecast-view h2 {
-    margin-bottom: 20px;
-}
-
 /* Tab buttons styling - matching budget page */
 .forecast-tabs {
     display: flex;
