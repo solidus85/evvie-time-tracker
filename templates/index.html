@@ -440,30 +440,34 @@
             </div>
 
             <div id="config-view" class="view">
-                <h2>Settings</h2>
-                <div class="config-section">
-                    <h3>Payroll Period Configuration</h3>
-                    <label>
-                        Anchor Date (First Period Start):
-                        <input type="date" id="anchor-date">
-                        <button id="configure-periods" class="btn-primary">Configure</button>
-                    </label>
-                </div>
-                <div class="config-section">
-                    <h3>Hour Limits</h3>
-                    <button id="add-hour-limit" class="btn-primary">Add Hour Limit</button>
-                    <table id="hour-limits-table">
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Child</th>
-                                <th>Max Hours/Week</th>
-                                <th>Alert Threshold</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div class="page-container">
+                    <div class="page-header">
+                        <h2>Settings</h2>
+                    </div>
+                    <div class="config-section">
+                        <h3>Payroll Period Configuration</h3>
+                        <label>
+                            Anchor Date (First Period Start):
+                            <input type="date" id="anchor-date">
+                            <button id="configure-periods" class="btn-primary">Configure</button>
+                        </label>
+                    </div>
+                    <div class="config-section">
+                        <h3>Hour Limits</h3>
+                        <button id="add-hour-limit" class="btn-primary">Add Hour Limit</button>
+                        <table id="hour-limits-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Child</th>
+                                    <th>Max Hours/Week</th>
+                                    <th>Alert Threshold</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
