@@ -135,34 +135,42 @@
             </div>
 
             <div id="import-view" class="view">
-                <h2>Import CSV</h2>
-                <div class="import-form">
-                    <input type="file" id="csv-file" accept=".csv" multiple>
-                    <button id="validate-csv" class="btn-secondary">Validate Files</button>
-                    <button id="import-csv" class="btn-primary">Import Files</button>
+                <div class="page-container">
+                    <div class="page-header">
+                        <h2>Import CSV</h2>
+                    </div>
+                    <div class="import-form">
+                        <input type="file" id="csv-file" accept=".csv" multiple>
+                        <button id="validate-csv" class="btn-secondary">Validate Files</button>
+                        <button id="import-csv" class="btn-primary">Import Files</button>
+                    </div>
+                    <div id="import-loading" class="import-loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Import in progress, please wait...</p>
+                    </div>
+                    <div id="import-results"></div>
                 </div>
-                <div id="import-loading" class="import-loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Import in progress, please wait...</p>
-                </div>
-                <div id="import-results"></div>
             </div>
 
             <div id="export-view" class="view">
-                <h2>Export Data</h2>
-                <div class="export-form">
-                    <label>
-                        Start Date:
-                        <input type="date" id="export-start">
-                    </label>
-                    <label>
-                        End Date:
-                        <input type="date" id="export-end">
-                    </label>
-                    <div class="export-buttons">
-                        <button id="export-pdf" class="btn-primary">Export PDF</button>
-                        <button id="export-csv" class="btn-primary">Export CSV</button>
-                        <button id="export-json" class="btn-primary">Export JSON</button>
+                <div class="page-container">
+                    <div class="page-header">
+                        <h2>Export Data</h2>
+                    </div>
+                    <div class="export-form">
+                        <label>
+                            Start Date:
+                            <input type="date" id="export-start">
+                        </label>
+                        <label>
+                            End Date:
+                            <input type="date" id="export-end">
+                        </label>
+                        <div class="export-buttons">
+                            <button id="export-pdf" class="btn-primary">Export PDF</button>
+                            <button id="export-csv" class="btn-primary">Export CSV</button>
+                            <button id="export-json" class="btn-primary">Export JSON</button>
+                        </div>
                     </div>
                 </div>
             </div>
