@@ -9,10 +9,13 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s;
+    font-weight: 500;
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .btn-secondary {
@@ -23,10 +26,13 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s;
+    font-weight: 500;
 }
 
 .btn-secondary:hover {
     background: var(--text-muted);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 /* Modal */
