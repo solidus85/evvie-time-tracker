@@ -1,25 +1,58 @@
 /* Layout and navigation */
 header {
+    position: fixed;
+    top: 20px;
+    left: 20px;
     background: var(--bg-secondary);
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px var(--shadow);
-    text-align: center;
+    padding: 15px 25px;
+    box-shadow: 0 2px 8px var(--shadow);
+    z-index: 100;
 }
 
 header h1 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 28px;
+    font-size: 24px;
+    font-weight: 600;
 }
 
 main {
+    max-width: 1400px;
+    margin: 80px auto 20px auto;
     background: var(--bg-secondary);
     border-radius: 8px;
-    box-shadow: 0 2px 4px var(--shadow);
+    box-shadow: 0 4px 12px var(--shadow);
     padding: 0;
     overflow: hidden;
+}
+
+@media (max-width: 1440px) {
+    main {
+        margin: 80px 20px 20px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        position: static;
+        margin: 20px;
+        text-align: center;
+    }
+    
+    main {
+        margin: 20px;
+    }
+    
+    nav.main-tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .nav-btn {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
 }
 
 nav.main-tabs {
