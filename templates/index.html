@@ -214,19 +214,20 @@
             </div>
 
             <div id="budget-view" class="view">
-                <div class="page-container">
-                    <div class="page-header">
-                        <h2>Budget Management</h2>
-                    </div>
-                    <div class="budget-tabs">
-                    <button class="tab-btn active" data-tab="reports">PDF Reports</button>
-                    <button class="tab-btn" data-tab="budgets">Child Budgets</button>
-                    <button class="tab-btn" data-tab="rates">Employee Rates</button>
-                    <button class="tab-btn" data-tab="allocations">Allocations</button>
-                    <button class="tab-btn" data-tab="utilization">Utilization</button>
-                </div>
-                
-                <!-- PDF Reports Tab -->
+                <div class="budget-container">
+                    <div class="budget-card">
+                        <div class="budget-header">
+                            <h2>Budget Management</h2>
+                            <div class="budget-tabs">
+                                <button class="tab-btn active" data-tab="reports">PDF Reports</button>
+                                <button class="tab-btn" data-tab="budgets">Child Budgets</button>
+                                <button class="tab-btn" data-tab="rates">Employee Rates</button>
+                                <button class="tab-btn" data-tab="allocations">Allocations</button>
+                                <button class="tab-btn" data-tab="utilization">Utilization</button>
+                            </div>
+                        </div>
+                        
+                        <!-- PDF Reports Tab -->
                 <div id="reports-tab" class="tab-content active">
                     <div class="reports-controls">
                         <button id="upload-pdf-report" class="btn-primary">Upload PDF Report</button>
@@ -423,8 +424,8 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
 

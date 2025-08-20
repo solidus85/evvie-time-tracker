@@ -1,16 +1,44 @@
 /* Budget management styles */
 
+/* Container and card */
+.budget-container {
+    padding: 20px;
+}
+
+.budget-card {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Header with tabs */
+.budget-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid var(--border-color);
+    gap: 30px;
+}
+
+.budget-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 /* Tab navigation */
 .budget-tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0;
+    flex: 1;
+    justify-content: flex-end;
 }
 
 .budget-tabs .tab-btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     background: transparent;
     border: none;
     border-bottom: 3px solid transparent;
@@ -19,6 +47,8 @@
     font-weight: 500;
     color: var(--text-secondary);
     transition: all 0.3s ease;
+    position: relative;
+    top: 2px;
 }
 
 .budget-tabs .tab-btn:hover {
@@ -32,6 +62,7 @@
 
 #budget-view .tab-content {
     display: none;
+    padding: 20px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -44,13 +75,36 @@
     to { opacity: 1; }
 }
 
+/* Responsive design */
+@media (max-width: 968px) {
+    .budget-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .budget-header h2 {
+        text-align: center;
+    }
+    
+    .budget-tabs {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .budget-tabs .tab-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
 /* Form containers */
 .form-container {
-    background: var(--bg-hover);
-    padding: 20px;
-    border-radius: 8px;
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 6px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 .form-container h3 {
