@@ -430,16 +430,17 @@
             </div>
 
             <div id="forecast-view" class="view">
-                <div class="page-container">
-                    <div class="page-header">
-                        <h2>Hour Forecasting</h2>
-                    </div>
-                    <div class="forecast-tabs">
-                        <button class="tab-btn active" data-tab="available-hours">Available Hours</button>
-                        <button class="tab-btn" data-tab="patterns">Historical Patterns</button>
-                        <button class="tab-btn" data-tab="projections">Projections</button>
-                    </div>
-                    <div id="available-hours-tab" class="tab-content active">
+                <div class="forecast-container">
+                    <div class="forecast-card">
+                        <div class="forecast-header">
+                            <h2>Hour Forecasting</h2>
+                            <div class="forecast-tabs">
+                                <button class="tab-btn active" data-tab="available-hours">Available Hours</button>
+                                <button class="tab-btn" data-tab="patterns">Historical Patterns</button>
+                                <button class="tab-btn" data-tab="projections">Projections</button>
+                            </div>
+                        </div>
+                        <div id="available-hours-tab" class="tab-content active">
                     <div class="forecast-controls">
                         <label>Period:
                             <input type="date" id="forecast-start">
@@ -474,7 +475,8 @@
                         <button id="generate-projection" class="btn-primary">Generate</button>
                     </div>
                     <div id="projections-display"></div>
-                </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
