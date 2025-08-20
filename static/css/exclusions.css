@@ -1,23 +1,22 @@
 /* Exclusions page styling */
 
 .exclusions-container {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 20px;
 }
 
 .exclusions-header {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .exclusions-header h2 {
     margin-top: 0;
     margin-bottom: 10px;
     color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 600;
 }
 
 .exclusions-description {
@@ -59,10 +58,10 @@
 }
 
 .exclusions-table-wrapper {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 4px var(--shadow);
+    margin-bottom: 20px;
 }
 
 #exclusions-table {
@@ -95,4 +94,23 @@
 
 #exclusions-table button {
     margin-right: 5px;
+}
+
+/* Pagination controls */
+.exclusions-container .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+}
+
+.exclusions-container .page-size-selector {
+    margin-left: auto;
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }

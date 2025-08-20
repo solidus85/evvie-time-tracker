@@ -5,18 +5,23 @@
 }
 
 .overlaps-header {
-    margin-bottom: 30px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .overlaps-header h2 {
     color: var(--text-primary);
     margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 600;
 }
 
 .overlaps-description {
     color: var(--text-secondary);
     font-size: 14px;
-    margin-bottom: 20px;
+    margin: 0;
 }
 
 .overlaps-table-wrapper {
