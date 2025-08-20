@@ -198,6 +198,61 @@ def delete_shift(shift_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@bp.route('/overlaps', methods=['GET'])
+def get_overlaps():
+    try:
+        service = ShiftService(current_app.db)
+        
+        # Get all shifts and find overlaps
+        shifts = service.get_shifts()
+        overlaps = []
+        
+        # Group shifts by employee and date
+        from collections import defaultdict
+        shifts_by_employee_date = defaultdict(list)
+        
+        for shift in shifts:
+            key = (shift['employee_id'], shift['date'])
+            shifts_by_employee_date[key].append(shift)
+        
+        # Find overlaps
+        for (employee_id, date), employee_shifts in shifts_by_employee_date.items():
+            if len(employee_shifts) < 2:
+                continue
+                
+            # Sort shifts by start time
+            employee_shifts.sort(key=lambda s: s['start_time'])
+            
+            # Check each pair of shifts for overlap
+            for i in range(len(employee_shifts)):
+                for j in range(i + 1, len(employee_shifts)):
+                    shift1 = employee_shifts[i]
+                    shift2 = employee_shifts[j]
+                    
+                    # Check if shifts overlap
+                    if shift1['end_time'] > shift2['start_time']:
+                        overlap = {
+                            'date': date,
+                            'employee_id': employee_id,
+                            'employee_name': shift1['employee_name'],
+                            'shift1_id': shift1['id'],
+                            'shift1_start': shift1['start_time'],
+                            'shift1_end': shift1['end_time'],
+                            'child1_name': shift1['child_name'],
+                            'shift2_id': shift2['id'],
+                            'shift2_start': shift2['start_time'],
+                            'shift2_end': shift2['end_time'],
+                            'child2_name': shift2['child_name']
+                        }
+                        overlaps.append(overlap)
+        
+        # Sort overlaps by date descending
+        overlaps.sort(key=lambda o: o['date'], reverse=True)
+        
+        return jsonify(overlaps)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @bp.route('/auto-generate', methods=['POST'])
 def auto_generate_shifts():
     try:

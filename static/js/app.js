@@ -105,6 +105,7 @@ class App {
         this.currentView = viewName;
         
         if (viewName === 'dashboard') this.loadDashboard();
+        else if (viewName === 'overlaps') this.loadOverlaps();
         else if (viewName === 'exclusions') this.loadExclusions();
         else if (viewName === 'employees') this.loadEmployees();
         else if (viewName === 'children') this.loadChildren();

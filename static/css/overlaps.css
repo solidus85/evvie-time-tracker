@@ -1,0 +1,121 @@
+/* Overlaps view styling */
+
+.overlaps-container {
+    padding: 20px;
+}
+
+.overlaps-header {
+    margin-bottom: 30px;
+}
+
+.overlaps-header h2 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.overlaps-description {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.overlaps-table-wrapper {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+#overlaps-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#overlaps-table thead th {
+    background: var(--bg-hover);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+#overlaps-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+
+#overlaps-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.overlap-duration {
+    font-weight: 600;
+    color: var(--danger-color);
+}
+
+.btn-small {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: var(--danger-hover);
+}
+
+.no-data {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 40px !important;
+}
+
+/* Pagination controls */
+.overlaps-container .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+}
+
+.overlaps-container .page-size-selector {
+    margin-left: auto;
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+#overlaps-page-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .overlaps-table-wrapper {
+        padding: 10px;
+    }
+    
+    #overlaps-table {
+        font-size: 12px;
+    }
+    
+    #overlaps-table thead th,
+    #overlaps-table tbody td {
+        padding: 8px;
+    }
+}

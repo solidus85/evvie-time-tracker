@@ -26,6 +26,7 @@
                 <h1>Evvie Time Tracker</h1>
                 <nav class="main-tabs">
                     <button id="btn-dashboard" class="nav-btn active" data-tab="dashboard">Dashboard</button>
+                    <button id="btn-overlaps" class="nav-btn" data-tab="overlaps">Overlaps</button>
                     <button id="btn-exclusions" class="nav-btn" data-tab="exclusions">Exclusions</button>
                     <button id="btn-employees" class="nav-btn" data-tab="employees">Employees</button>
                     <button id="btn-children" class="nav-btn" data-tab="children">Children</button>
@@ -51,6 +52,45 @@
                 <div id="period-summary" class="summary">
                 </div>
                 <div id="overlap-detection" class="overlap-section">
+                </div>
+            </div>
+
+            <div id="overlaps-view" class="view">
+                <div class="overlaps-container">
+                    <div class="overlaps-header">
+                        <h2>Shift Overlaps</h2>
+                        <p class="overlaps-description">View and manage overlapping shifts for the same employee</p>
+                    </div>
+                    <div class="overlaps-table-wrapper">
+                        <table id="overlaps-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Shift 1</th>
+                                    <th>Child 1</th>
+                                    <th>Shift 2</th>
+                                    <th>Child 2</th>
+                                    <th>Overlap</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overlaps-tbody">
+                                <!-- Overlaps will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="overlaps-prev-page" class="btn-secondary" disabled>Previous</button>
+                        <span id="overlaps-page-info">Page 1</span>
+                        <button id="overlaps-next-page" class="btn-secondary">Next</button>
+                        <select id="overlaps-page-size" class="page-size-selector">
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="all">Show all</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -483,6 +523,7 @@
 
     <script src="/static/js/app.js"></script>
     <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/overlaps.js"></script>
     <script src="/static/js/exclusions.js"></script>
     <script src="/static/js/employees.js"></script>
     <script src="/static/js/children.js"></script>
