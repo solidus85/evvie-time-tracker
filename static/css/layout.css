@@ -1,20 +1,18 @@
 /* Layout and navigation */
-header {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 15px 25px;
-    box-shadow: 0 2px 8px var(--shadow);
-    z-index: 100;
+.main-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid var(--border-color);
+    gap: 30px;
 }
 
-header h1 {
+.main-header h1 {
     margin: 0;
     color: var(--text-primary);
     font-size: 24px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 main {
@@ -33,38 +31,44 @@ main {
     }
 }
 
-@media (max-width: 768px) {
-    header {
-        position: static;
-        margin: 20px;
+@media (max-width: 968px) {
+    .main-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .main-header h1 {
         text-align: center;
     }
     
-    main {
-        margin: 20px;
-    }
-    
     nav.main-tabs {
-        flex-wrap: wrap;
-        gap: 5px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        margin: 10px;
     }
     
     .nav-btn {
         font-size: 12px;
-        padding: 8px 12px;
+        padding: 6px 10px;
     }
 }
 
 nav.main-tabs {
     display: flex;
     gap: 10px;
-    border-bottom: 2px solid var(--border-color);
-    padding: 20px 20px 0 20px;
-    background: var(--bg-secondary);
+    flex: 1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .nav-btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     background: transparent;
     border: none;
     border-bottom: 3px solid transparent;
@@ -73,6 +77,8 @@ nav.main-tabs {
     font-weight: 500;
     color: var(--text-secondary);
     transition: all 0.3s ease;
+    position: relative;
+    top: 2px;
 }
 
 .nav-btn:hover {
