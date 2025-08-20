@@ -5,18 +5,29 @@ header {
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 2px 4px var(--shadow);
+    text-align: center;
 }
 
 header h1 {
-    margin-bottom: 15px;
+    margin: 0;
     color: var(--text-primary);
+    font-size: 28px;
 }
 
-nav {
+main {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow);
+    padding: 0;
+    overflow: hidden;
+}
+
+nav.main-tabs {
     display: flex;
     gap: 10px;
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0;
+    padding: 20px 20px 0 20px;
+    background: var(--bg-secondary);
 }
 
 .nav-btn {
@@ -42,10 +53,7 @@ nav {
 
 .view {
     display: none;
-    background: var(--bg-secondary);
-    border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 4px var(--shadow);
     animation: fadeIn 0.3s ease;
 }
 

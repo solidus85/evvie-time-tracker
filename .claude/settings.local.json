@@ -6,7 +6,10 @@
       "Bash(sqlite3:*)",
       "Bash(source:*)",
       "Bash(python:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }
