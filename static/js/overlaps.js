@@ -81,6 +81,15 @@ class OverlapsManager {
         const shift2Desc = `${this.formatTime(overlap.shift2_start)} - ${this.formatTime(overlap.shift2_end)}<br>
                            <small>${overlap.shift2_employee} / ${overlap.shift2_child}</small>`;
         
+        // Check if either shift is imported
+        const canResolve = !overlap.shift1_imported && !overlap.shift2_imported;
+        
+        const actionButton = canResolve 
+            ? `<button class="btn-small btn-danger" onclick="overlapsManager.resolveOverlap(${overlap.shift1_id}, ${overlap.shift2_id}, '${overlap.overlap_type}')">
+                   Resolve
+               </button>`
+            : '<span class="text-muted">Imported</span>';
+        
         row.innerHTML = `
             <td>${this.formatDate(overlap.date)}</td>
             <td>${typeBadge}</td>
@@ -88,11 +97,7 @@ class OverlapsManager {
             <td>${shift1Desc}</td>
             <td>${shift2Desc}</td>
             <td class="overlap-duration">${this.calculateOverlapDuration(overlap)} hrs</td>
-            <td>
-                <button class="btn-small btn-danger" onclick="overlapsManager.resolveOverlap(${overlap.shift1_id}, ${overlap.shift2_id}, '${overlap.overlap_type}')">
-                    Resolve
-                </button>
-            </td>
+            <td>${actionButton}</td>
         `;
         return row;
     }

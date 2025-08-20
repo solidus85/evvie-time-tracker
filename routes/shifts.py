@@ -249,11 +249,13 @@ def get_overlaps():
                             'shift1_end': shift1['end_time'],
                             'shift1_employee': shift1['employee_name'],
                             'shift1_child': shift1['child_name'],
+                            'shift1_imported': shift1['is_imported'] if 'is_imported' in shift1.keys() else False,
                             'shift2_id': shift2['id'],
                             'shift2_start': shift2['start_time'],
                             'shift2_end': shift2['end_time'],
                             'shift2_employee': shift2['employee_name'],
-                            'shift2_child': shift2['child_name']
+                            'shift2_child': shift2['child_name'],
+                            'shift2_imported': shift2['is_imported'] if 'is_imported' in shift2.keys() else False
                         }
                         overlaps.append(overlap)
         
@@ -289,11 +291,13 @@ def get_overlaps():
                             'shift1_end': shift1['end_time'],
                             'shift1_employee': shift1['employee_name'],
                             'shift1_child': shift1['child_name'],
+                            'shift1_imported': shift1['is_imported'] if 'is_imported' in shift1.keys() else False,
                             'shift2_id': shift2['id'],
                             'shift2_start': shift2['start_time'],
                             'shift2_end': shift2['end_time'],
                             'shift2_employee': shift2['employee_name'],
-                            'shift2_child': shift2['child_name']
+                            'shift2_child': shift2['child_name'],
+                            'shift2_imported': shift2['is_imported'] if 'is_imported' in shift2.keys() else False
                         }
                         overlaps.append(overlap)
         
