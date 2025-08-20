@@ -16,16 +16,13 @@ class App {
     }
 
     setupEventListeners() {
-        // Navigation buttons
-        document.getElementById('btn-dashboard').addEventListener('click', () => this.showView('dashboard'));
-        document.getElementById('btn-exclusions').addEventListener('click', () => this.showView('exclusions'));
-        document.getElementById('btn-employees').addEventListener('click', () => this.showView('employees'));
-        document.getElementById('btn-children').addEventListener('click', () => this.showView('children'));
-        document.getElementById('btn-budget').addEventListener('click', () => this.showView('budget'));
-        document.getElementById('btn-forecast').addEventListener('click', () => this.showView('forecast'));
-        document.getElementById('btn-import').addEventListener('click', () => this.showView('import'));
-        document.getElementById('btn-export').addEventListener('click', () => this.showView('export'));
-        document.getElementById('btn-config').addEventListener('click', () => this.showView('config'));
+        // Navigation tabs - use event delegation for better performance
+        document.querySelector('.main-tabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('nav-btn')) {
+                const tab = e.target.dataset.tab;
+                this.showView(tab);
+            }
+        });
         
         // Dashboard controls
         document.getElementById('prev-period').addEventListener('click', () => this.navigatePeriod(-1));
