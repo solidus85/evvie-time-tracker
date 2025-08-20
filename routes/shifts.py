@@ -207,15 +207,21 @@ def get_overlaps():
         shifts = service.get_shifts()
         overlaps = []
         
-        # Group shifts by employee and date
         from collections import defaultdict
+        
+        # Group shifts by employee and date for employee overlap detection
         shifts_by_employee_date = defaultdict(list)
+        # Group shifts by child and date for child overlap detection
+        shifts_by_child_date = defaultdict(list)
         
         for shift in shifts:
-            key = (shift['employee_id'], shift['date'])
-            shifts_by_employee_date[key].append(shift)
+            employee_key = (shift['employee_id'], shift['date'])
+            shifts_by_employee_date[employee_key].append(shift)
+            
+            child_key = (shift['child_id'], shift['date'])
+            shifts_by_child_date[child_key].append(shift)
         
-        # Find overlaps
+        # Find employee overlaps (same employee, overlapping times)
         for (employee_id, date), employee_shifts in shifts_by_employee_date.items():
             if len(employee_shifts) < 2:
                 continue
@@ -233,16 +239,61 @@ def get_overlaps():
                     if shift1['end_time'] > shift2['start_time']:
                         overlap = {
                             'date': date,
+                            'overlap_type': 'employee',
                             'employee_id': employee_id,
                             'employee_name': shift1['employee_name'],
+                            'child_id': None,
+                            'child_name': None,
                             'shift1_id': shift1['id'],
                             'shift1_start': shift1['start_time'],
                             'shift1_end': shift1['end_time'],
-                            'child1_name': shift1['child_name'],
+                            'shift1_employee': shift1['employee_name'],
+                            'shift1_child': shift1['child_name'],
                             'shift2_id': shift2['id'],
                             'shift2_start': shift2['start_time'],
                             'shift2_end': shift2['end_time'],
-                            'child2_name': shift2['child_name']
+                            'shift2_employee': shift2['employee_name'],
+                            'shift2_child': shift2['child_name']
+                        }
+                        overlaps.append(overlap)
+        
+        # Find child overlaps (same child, different employees, overlapping times)
+        for (child_id, date), child_shifts in shifts_by_child_date.items():
+            if len(child_shifts) < 2:
+                continue
+                
+            # Sort shifts by start time
+            child_shifts.sort(key=lambda s: s['start_time'])
+            
+            # Check each pair of shifts for overlap
+            for i in range(len(child_shifts)):
+                for j in range(i + 1, len(child_shifts)):
+                    shift1 = child_shifts[i]
+                    shift2 = child_shifts[j]
+                    
+                    # Skip if same employee (already handled above)
+                    if shift1['employee_id'] == shift2['employee_id']:
+                        continue
+                    
+                    # Check if shifts overlap
+                    if shift1['end_time'] > shift2['start_time']:
+                        overlap = {
+                            'date': date,
+                            'overlap_type': 'child',
+                            'employee_id': None,
+                            'employee_name': None,
+                            'child_id': child_id,
+                            'child_name': shift1['child_name'],
+                            'shift1_id': shift1['id'],
+                            'shift1_start': shift1['start_time'],
+                            'shift1_end': shift1['end_time'],
+                            'shift1_employee': shift1['employee_name'],
+                            'shift1_child': shift1['child_name'],
+                            'shift2_id': shift2['id'],
+                            'shift2_start': shift2['start_time'],
+                            'shift2_end': shift2['end_time'],
+                            'shift2_employee': shift2['employee_name'],
+                            'shift2_child': shift2['child_name']
                         }
                         overlaps.append(overlap)
         

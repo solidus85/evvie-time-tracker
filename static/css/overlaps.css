@@ -56,6 +56,32 @@
     color: var(--danger-color);
 }
 
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-employee {
+    background: var(--warning-bg);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+}
+
+.badge-child {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+#overlaps-table small {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
 .btn-small {
     padding: 4px 12px;
     font-size: 12px;

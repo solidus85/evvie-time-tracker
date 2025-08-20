@@ -44,7 +44,7 @@ class OverlapsManager {
         const tbody = document.getElementById('overlaps-tbody');
         
         if (this.overlaps.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="no-data">No overlapping shifts found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No overlapping shifts found</td></tr>';
             this.updatePaginationControls();
             return;
         }
@@ -65,16 +65,31 @@ class OverlapsManager {
 
     createOverlapRow(overlap) {
         const row = document.createElement('tr');
+        
+        // Determine the type badge and conflict description
+        const typeBadge = overlap.overlap_type === 'employee' 
+            ? '<span class="badge badge-employee">Employee</span>'
+            : '<span class="badge badge-child">Child</span>';
+            
+        const conflictDesc = overlap.overlap_type === 'employee'
+            ? `${overlap.employee_name}`
+            : `${overlap.child_name}`;
+            
+        const shift1Desc = `${this.formatTime(overlap.shift1_start)} - ${this.formatTime(overlap.shift1_end)}<br>
+                           <small>${overlap.shift1_employee} / ${overlap.shift1_child}</small>`;
+                           
+        const shift2Desc = `${this.formatTime(overlap.shift2_start)} - ${this.formatTime(overlap.shift2_end)}<br>
+                           <small>${overlap.shift2_employee} / ${overlap.shift2_child}</small>`;
+        
         row.innerHTML = `
             <td>${this.formatDate(overlap.date)}</td>
-            <td>${overlap.employee_name}</td>
-            <td>${this.formatTime(overlap.shift1_start)} - ${this.formatTime(overlap.shift1_end)}</td>
-            <td>${overlap.child1_name}</td>
-            <td>${this.formatTime(overlap.shift2_start)} - ${this.formatTime(overlap.shift2_end)}</td>
-            <td>${overlap.child2_name}</td>
+            <td>${typeBadge}</td>
+            <td><strong>${conflictDesc}</strong></td>
+            <td>${shift1Desc}</td>
+            <td>${shift2Desc}</td>
             <td class="overlap-duration">${this.calculateOverlapDuration(overlap)} hrs</td>
             <td>
-                <button class="btn-small btn-danger" onclick="overlapsManager.resolveOverlap(${overlap.shift1_id}, ${overlap.shift2_id})">
+                <button class="btn-small btn-danger" onclick="overlapsManager.resolveOverlap(${overlap.shift1_id}, ${overlap.shift2_id}, '${overlap.overlap_type}')">
                     Resolve
                 </button>
             </td>
@@ -95,8 +110,12 @@ class OverlapsManager {
         return duration.toFixed(2);
     }
 
-    async resolveOverlap(shift1Id, shift2Id) {
-        if (!confirm('This will open a dialog to resolve the overlap. Continue?')) {
+    async resolveOverlap(shift1Id, shift2Id, overlapType) {
+        const typeText = overlapType === 'employee' 
+            ? 'employee is scheduled for overlapping times'
+            : 'child has multiple employees scheduled at the same time';
+            
+        if (!confirm(`This ${typeText}. How would you like to resolve this conflict?`)) {
             return;
         }
 
