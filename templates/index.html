@@ -440,41 +440,42 @@
                                 <button class="tab-btn" data-tab="projections">Projections</button>
                             </div>
                         </div>
+                        
                         <div id="available-hours-tab" class="tab-content active">
-                    <div class="forecast-controls">
-                        <label>Period:
-                            <input type="date" id="forecast-start">
-                        </label>
-                        <label>to
-                            <input type="date" id="forecast-end">
-                        </label>
-                        <button id="refresh-forecast" class="btn-primary">Refresh</button>
-                    </div>
-                    <div id="available-hours-cards" class="forecast-cards"></div>
-                </div>
-                <div id="patterns-tab" class="tab-content">
-                    <div class="pattern-controls">
-                        <label>Child:
-                            <select id="pattern-child"></select>
-                        </label>
-                        <label>Lookback Days:
-                            <input type="number" id="lookback-days" value="90" min="7" max="365">
-                        </label>
-                        <button id="analyze-patterns" class="btn-primary">Analyze</button>
-                    </div>
-                    <div id="patterns-display"></div>
-                </div>
-                <div id="projections-tab" class="tab-content">
-                    <div class="projection-controls">
-                        <label>Child:
-                            <select id="projection-child"></select>
-                        </label>
-                        <label>Projection Days:
-                            <input type="number" id="projection-days" value="30" min="7" max="90">
-                        </label>
-                        <button id="generate-projection" class="btn-primary">Generate</button>
-                    </div>
-                    <div id="projections-display"></div>
+                            <div class="forecast-controls">
+                                <label>Period:
+                                    <input type="date" id="forecast-start">
+                                </label>
+                                <label>to
+                                    <input type="date" id="forecast-end">
+                                </label>
+                                <button id="refresh-forecast" class="btn-primary">Refresh</button>
+                            </div>
+                            <div id="available-hours-cards" class="forecast-cards"></div>
+                        </div>
+                                <div id="patterns-tab" class="tab-content">
+                            <div class="pattern-controls">
+                                <label>Child:
+                                    <select id="pattern-child"></select>
+                                </label>
+                                <label>Lookback Days:
+                                    <input type="number" id="lookback-days" value="90" min="7" max="365">
+                                </label>
+                                <button id="analyze-patterns" class="btn-primary">Analyze</button>
+                            </div>
+                            <div id="patterns-display"></div>
+                        </div>
+                                <div id="projections-tab" class="tab-content">
+                            <div class="projection-controls">
+                                <label>Child:
+                                    <select id="projection-child"></select>
+                                </label>
+                                <label>Projection Days:
+                                    <input type="number" id="projection-days" value="30" min="7" max="90">
+                                </label>
+                                <button id="generate-projection" class="btn-primary">Generate</button>
+                            </div>
+                            <div id="projections-display"></div>
                         </div>
                     </div>
                 </div>
