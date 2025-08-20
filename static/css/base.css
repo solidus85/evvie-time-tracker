@@ -1,5 +1,43 @@
 /* Base styles and reset */
 :root {
+    /* Dark mode colors (default) */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-hover: #3a3a3a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #808080;
+    --border-color: #404040;
+    --border-light: #333333;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+    
+    /* Accent colors (adjusted for dark mode) */
+    --primary-color: #4dabf7;
+    --primary-hover: #339af0;
+    --success-color: #51cf66;
+    --success-hover: #40c057;
+    --warning-color: #ffd43b;
+    --warning-bg: #3a3a1a;
+    --danger-color: #ff6b6b;
+    --danger-hover: #ff5252;
+    
+    /* Component specific */
+    --header-bg: #1c2128;
+    --header-text: #e0e0e0;
+    --nav-btn-bg: rgba(255, 255, 255, 0.05);
+    --nav-btn-hover: rgba(255, 255, 255, 0.1);
+    --nav-btn-active: rgba(255, 255, 255, 0.15);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --weekend-bg: #252525;
+    --imported-bg: #1a2332;
+    --parent-paid-bg: #2d2619;
+    --exclusion-bg: #2d1a1a;
+    --overlap-employee-bg: #3a1a1a;
+    --overlap-child-bg: #1a2a3a;
+}
+
+[data-theme="light"] {
     /* Light mode colors */
     --bg-primary: #f5f5f5;
     --bg-secondary: #ffffff;
@@ -35,44 +73,6 @@
     --exclusion-bg: #ffebee;
     --overlap-employee-bg: #ffe8e8;
     --overlap-child-bg: #e8f0ff;
-}
-
-[data-theme="dark"] {
-    /* Dark mode colors */
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #2d2d2d;
-    --bg-hover: #3a3a3a;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #808080;
-    --border-color: #404040;
-    --border-light: #333333;
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-hover: rgba(0, 0, 0, 0.5);
-    
-    /* Accent colors (adjusted for dark mode) */
-    --primary-color: #4dabf7;
-    --primary-hover: #339af0;
-    --success-color: #51cf66;
-    --success-hover: #40c057;
-    --warning-color: #ffd43b;
-    --warning-bg: #3a3a1a;
-    --danger-color: #ff6b6b;
-    --danger-hover: #ff5252;
-    
-    /* Component specific */
-    --header-bg: #1c2128;
-    --header-text: #e0e0e0;
-    --nav-btn-bg: rgba(255, 255, 255, 0.05);
-    --nav-btn-hover: rgba(255, 255, 255, 0.1);
-    --nav-btn-active: rgba(255, 255, 255, 0.15);
-    --modal-overlay: rgba(0, 0, 0, 0.7);
-    --weekend-bg: #252525;
-    --imported-bg: #1a2332;
-    --parent-paid-bg: #2d2619;
-    --exclusion-bg: #2d1a1a;
-    --overlap-employee-bg: #3a1a1a;
-    --overlap-child-bg: #1a2a3a;
 }
 
 * {

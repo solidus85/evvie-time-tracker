@@ -3,7 +3,7 @@
 class ThemeManager {
     constructor() {
         this.themeToggle = document.getElementById('theme-toggle');
-        this.currentTheme = localStorage.getItem('theme') || 'light';
+        this.currentTheme = localStorage.getItem('theme') || 'dark';
         this.init();
     }
 
@@ -25,9 +25,9 @@ class ThemeManager {
                 }
             });
             
-            // Apply system preference if no saved preference
+            // Apply system preference if no saved preference (default to dark)
             if (!localStorage.getItem('theme')) {
-                this.currentTheme = darkModeQuery.matches ? 'dark' : 'light';
+                this.currentTheme = 'dark';
                 this.applyTheme(this.currentTheme);
             }
         }
@@ -40,15 +40,15 @@ class ThemeManager {
         }
         
         // Apply theme
-        if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
             if (this.themeToggle) {
-                this.themeToggle.setAttribute('data-tooltip', 'Switch to light mode');
+                this.themeToggle.setAttribute('data-tooltip', 'Switch to dark mode');
             }
         } else {
             document.documentElement.removeAttribute('data-theme');
             if (this.themeToggle) {
-                this.themeToggle.setAttribute('data-tooltip', 'Switch to dark mode');
+                this.themeToggle.setAttribute('data-tooltip', 'Switch to light mode');
             }
         }
         

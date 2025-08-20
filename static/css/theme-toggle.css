@@ -34,21 +34,21 @@
     fill: var(--text-primary);
 }
 
-/* Sun icon (light mode) */
-.theme-toggle .sun-icon {
+/* Moon icon (dark mode - default) */
+.theme-toggle .moon-icon {
     display: block;
 }
 
-.theme-toggle .moon-icon {
+.theme-toggle .sun-icon {
     display: none;
 }
 
-/* Moon icon (dark mode) */
-[data-theme="dark"] .theme-toggle .sun-icon {
+/* Sun icon (light mode) */
+[data-theme="light"] .theme-toggle .moon-icon {
     display: none;
 }
 
-[data-theme="dark"] .theme-toggle .moon-icon {
+[data-theme="light"] .theme-toggle .sun-icon {
     display: block;
 }
 
