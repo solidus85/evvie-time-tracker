@@ -1,0 +1,118 @@
+/* Standardized card styling system */
+
+/* Base card styles - shared by all depths */
+.card-depth-1,
+.card-depth-2,
+.card-depth-3 {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Depth 1 - Primary/outermost cards */
+.card-depth-1 {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0; /* Content sections handle their own padding */
+}
+
+/* Depth 2 - Secondary/nested cards */
+.card-depth-2 {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin: 15px;
+    padding: 15px;
+}
+
+/* Depth 3 - Tertiary/deeply nested cards */
+.card-depth-3 {
+    background: var(--bg-hover);
+    border: 1px solid var(--border-light);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+    margin: 10px;
+    padding: 10px;
+}
+
+/* Card headers - can be used with any depth */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.card-depth-2 .card-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.card-depth-3 .card-header {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Card body - main content area */
+.card-body {
+    padding: 20px;
+}
+
+.card-depth-2 .card-body {
+    padding: 15px;
+}
+
+.card-depth-3 .card-body {
+    padding: 10px;
+}
+
+/* Card footer - optional */
+.card-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-light);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Hover effects for interactive cards */
+.card-depth-1.interactive:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-depth-2.interactive:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.card-depth-3.interactive:hover {
+    background: var(--bg-secondary);
+}
+
+/* Card sections for organizing content */
+.card-section {
+    padding: 15px 20px;
+}
+
+.card-section + .card-section {
+    border-top: 1px solid var(--border-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-depth-2 {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    .card-depth-3 {
+        margin: 5px;
+        padding: 8px;
+    }
+    
+    .card-header {
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
