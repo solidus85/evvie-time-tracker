@@ -10,7 +10,10 @@
       "Bash(pkill:*)",
       "Bash(lsof:*)",
       "Bash(kill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

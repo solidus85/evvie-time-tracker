@@ -4,9 +4,6 @@ App.prototype.loadForecast = async function() {
     // Initialize tab switching
     this.setupForecastTabs();
     
-    // Load initial tab data
-    await this.loadAvailableHours();
-    
     // Setup event listeners
     document.getElementById('refresh-forecast').addEventListener('click', () => this.loadAvailableHours());
     document.getElementById('analyze-patterns').addEventListener('click', () => this.analyzePatterns());
@@ -15,8 +12,8 @@ App.prototype.loadForecast = async function() {
     // Populate child dropdowns
     this.populateForecastChildDropdowns();
     
-    // Set default dates for forecast
-    this.setDefaultForecastDates();
+    // Set default dates for forecast - this will also load available hours
+    await this.setDefaultForecastDates();
 };
 
 App.prototype.setupForecastTabs = function() {
@@ -45,6 +42,8 @@ App.prototype.setDefaultForecastDates = async function() {
         if (currentPeriod) {
             document.getElementById('forecast-start').value = currentPeriod.start_date;
             document.getElementById('forecast-end').value = currentPeriod.end_date;
+            // After setting dates, load the data
+            await this.loadAvailableHours();
         }
     } catch (error) {
         console.error('Failed to set default dates:', error);

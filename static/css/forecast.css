@@ -12,6 +12,17 @@
     overflow: hidden;
 }
 
+/* Ensure text is visible in forecast cards */
+.forecast-cards {
+    color: var(--text-primary);
+}
+
+.forecast-cards p {
+    color: var(--text-primary);
+    padding: 20px;
+    text-align: center;
+}
+
 /* Header with tabs */
 .forecast-header {
     display: flex;
