@@ -1,32 +1,8 @@
 /* Budget management styles */
 
-/* Container and card */
+/* Container */
 .budget-container {
     padding: 20px;
-}
-
-.budget-card {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 0;
-    overflow: hidden;
-}
-
-/* Header with tabs */
-.budget-header {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 2px solid var(--border-color);
-    gap: 30px;
-}
-
-.budget-header h2 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 600;
-    white-space: nowrap;
 }
 
 /* Tab navigation */

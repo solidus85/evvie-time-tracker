@@ -4,21 +4,6 @@
     padding: 20px;
 }
 
-.exclusions-header {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.exclusions-header h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 600;
-}
-
 .exclusions-description {
     color: var(--text-secondary);
     margin-bottom: 15px;

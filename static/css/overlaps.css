@@ -4,20 +4,6 @@
     padding: 20px;
 }
 
-.overlaps-header {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.overlaps-header h2 {
-    color: var(--text-primary);
-    margin-bottom: 10px;
-    font-size: 20px;
-    font-weight: 600;
-}
-
 .overlaps-description {
     color: var(--text-secondary);
     font-size: 14px;

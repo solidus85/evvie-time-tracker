@@ -57,11 +57,15 @@
 
             <div id="overlaps-view" class="view">
                 <div class="overlaps-container">
-                    <div class="overlaps-header">
-                        <h2>Shift Overlaps</h2>
-                        <p class="overlaps-description">View and manage all shift conflicts (employee and child overlaps)</p>
-                    </div>
-                    <div class="overlaps-table-wrapper">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <div>
+                                <h2>Shift Overlaps</h2>
+                                <p class="overlaps-description">View and manage all shift conflicts (employee and child overlaps)</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="overlaps-table-wrapper">
                         <table id="overlaps-table">
                             <thead>
                                 <tr>
@@ -90,50 +94,59 @@
                             <option value="all">Show all</option>
                         </select>
                     </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="exclusions-view" class="view">
                 <div class="exclusions-container">
-                    <div class="exclusions-header">
-                        <h2>Exclusion Periods</h2>
-                        <p class="exclusions-description">Define periods when manual shift entry should be blocked (e.g., when data is imported from external system)</p>
-                        <div class="exclusion-buttons">
-                            <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
-                            <button id="bulk-add-exclusions" class="btn-primary">Bulk Add Exclusions</button>
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <div>
+                                <h2>Exclusion Periods</h2>
+                                <p class="exclusions-description">Define periods when manual shift entry should be blocked (e.g., when data is imported from external system)</p>
+                            </div>
+                            <div>
+                                <button id="add-exclusion" class="btn-primary">Add Exclusion Period</button>
+                                <button id="bulk-add-exclusions" class="btn-primary">Bulk Add Exclusions</button>
+                            </div>
                         </div>
-                        <div class="exclusion-filters">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="filter-future-exclusions" checked>
-                                <span>Hide exclusions after current period</span>
-                            </label>
+                        <div class="card-body">
+                            <div class="exclusion-filters">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="filter-future-exclusions" checked>
+                                    <span>Hide exclusions after current period</span>
+                                </label>
+                            </div>
+                            <div class="exclusions-table-wrapper">
+                                <table id="exclusions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Applies To</th>
+                                            <th>Start Date/Time</th>
+                                            <th>End Date/Time</th>
+                                            <th>Reason</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                    <div class="exclusions-table-wrapper">
-                        <table id="exclusions-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Applies To</th>
-                                    <th>Start Date/Time</th>
-                                    <th>End Date/Time</th>
-                                    <th>Reason</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
                 </div>
             </div>
 
             <div id="employees-view" class="view">
                 <div class="page-container">
-                    <div class="page-header">
-                        <h2>Employees</h2>
-                        <button id="add-employee" class="btn-primary">Add Employee</button>
-                    </div>
-                    <div class="table-wrapper">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <h2>Employees</h2>
+                            <button id="add-employee" class="btn-primary">Add Employee</button>
+                        </div>
+                        <div class="card-body">
                         <table id="employees-table">
                             <thead>
                                 <tr>
@@ -146,17 +159,19 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="children-view" class="view">
                 <div class="page-container">
-                    <div class="page-header">
-                        <h2>Children</h2>
-                        <button id="add-child" class="btn-primary">Add Child</button>
-                    </div>
-                    <div class="table-wrapper">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <h2>Children</h2>
+                            <button id="add-child" class="btn-primary">Add Child</button>
+                        </div>
+                        <div class="card-body">
                         <table id="children-table">
                             <thead>
                                 <tr>
@@ -168,16 +183,19 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="import-view" class="view">
                 <div class="page-container">
-                    <div class="page-header">
-                        <h2>Import CSV</h2>
-                    </div>
-                    <div class="import-form">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <h2>Import CSV</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="import-form">
                         <input type="file" id="csv-file" accept=".csv" multiple>
                         <button id="validate-csv" class="btn-secondary">Validate Files</button>
                         <button id="import-csv" class="btn-primary">Import Files</button>
@@ -187,15 +205,19 @@
                         <p>Import in progress, please wait...</p>
                     </div>
                     <div id="import-results"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="export-view" class="view">
                 <div class="page-container">
-                    <div class="page-header">
-                        <h2>Export Data</h2>
-                    </div>
-                    <div class="export-form">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <h2>Export Data</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="export-form">
                         <label>
                             Start Date:
                             <input type="date" id="export-start">
@@ -210,13 +232,15 @@
                             <button id="export-json" class="btn-primary">Export JSON</button>
                         </div>
                     </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="budget-view" class="view">
                 <div class="budget-container">
-                    <div class="budget-card">
-                        <div class="budget-header">
+                    <div class="card-depth-1">
+                        <div class="card-header">
                             <h2>Budget Management</h2>
                             <div class="budget-tabs">
                                 <button class="tab-btn active" data-tab="reports">PDF Reports</button>
@@ -432,8 +456,8 @@
 
             <div id="forecast-view" class="view">
                 <div class="forecast-container">
-                    <div class="forecast-card">
-                        <div class="forecast-header">
+                    <div class="card-depth-1">
+                        <div class="card-header">
                             <h2>Hour Forecasting</h2>
                             <div class="forecast-tabs">
                                 <button class="tab-btn active" data-tab="available-hours">Available Hours</button>
@@ -484,10 +508,12 @@
 
             <div id="config-view" class="view">
                 <div class="page-container">
-                    <div class="page-header">
-                        <h2>Settings</h2>
-                    </div>
-                    <div class="config-section">
+                    <div class="card-depth-1">
+                        <div class="card-header">
+                            <h2>Settings</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="config-section">
                         <h3>Payroll Period Configuration</h3>
                         <label>
                             Anchor Date (First Period Start):
@@ -510,6 +536,8 @@
                             </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                        </div>
                     </div>
                 </div>
             </div>

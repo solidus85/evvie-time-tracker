@@ -1,15 +1,8 @@
 /* Forecast management styles */
 
-/* Container and card */
+/* Container */
 .forecast-container {
     padding: 20px;
-}
-
-.forecast-card {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 0;
-    overflow: hidden;
 }
 
 /* Ensure text is visible in forecast cards */
@@ -21,23 +14,6 @@
     color: var(--text-primary);
     padding: 20px;
     text-align: center;
-}
-
-/* Header with tabs */
-.forecast-header {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 2px solid var(--border-color);
-    gap: 30px;
-}
-
-.forecast-header h2 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 600;
-    white-space: nowrap;
 }
 
 /* Tab navigation */

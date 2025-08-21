@@ -143,26 +143,7 @@ nav.main-tabs {
     padding: 20px;
 }
 
-.page-header {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.page-header h2 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 600;
-}
-
+/* Table wrapper - now use card-body for styling */
 .table-wrapper {
-    background: var(--bg-primary);
-    border-radius: 8px;
-    padding: 20px;
     overflow-x: auto;
 }
