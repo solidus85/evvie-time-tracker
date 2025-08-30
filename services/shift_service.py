@@ -314,6 +314,14 @@ class ShiftService:
             (child_id, date)
         )
         
+        # Get all existing shifts for this employee on this date (with any child)
+        employee_shifts = self.db.fetchall(
+            """SELECT * FROM shifts 
+               WHERE employee_id = ? AND date = ?
+               ORDER BY start_time""",
+            (employee_id, date)
+        )
+        
         # Get exclusions for this date
         exclusions = self.check_exclusions(employee_id, child_id, date, 
                                            day_start.strftime('%H:%M:%S'), 
@@ -357,6 +365,23 @@ class ShiftService:
                 'start': round_down_to_15(start),
                 'end': round_up_to_15(end)
             })
+        
+        # Add employee's existing shifts with other children to blocked periods
+        for shift in employee_shifts:
+            # Don't double-count shifts with this same child (already in existing_shifts)
+            if int(shift['child_id']) != int(child_id):
+                start = shift['start_time']
+                end = shift['end_time']
+                # Convert string times to time objects if needed
+                if isinstance(start, str):
+                    start = datetime.strptime(start, '%H:%M:%S').time()
+                if isinstance(end, str):
+                    end = datetime.strptime(end, '%H:%M:%S').time()
+                # Round the blocked period to 15-minute boundaries
+                blocked_periods.append({
+                    'start': round_down_to_15(start),
+                    'end': round_up_to_15(end)
+                })
         
         # Add child-specific exclusion periods if they have time constraints
         for exc in exclusions:
