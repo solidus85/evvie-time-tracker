@@ -7,6 +7,7 @@ from services.employee_service import EmployeeService
 from services.child_service import ChildService
 from services.shift_service import ShiftService
 from services.config_service import ConfigService
+from services.payroll_service import PayrollService
 
 class ImportService:
     def __init__(self, db):
@@ -167,7 +168,7 @@ class ImportService:
                 'rows': 0
             }
     
-    def import_csv(self, file):
+    def import_csv(self, file, reconcile_period=False):
         content = file.read().decode('utf-8')
         reader = csv.DictReader(StringIO(content))
         
@@ -207,6 +208,8 @@ class ImportService:
                     baseline_set = True
         except Exception:
             pass
+        # Track keys seen in this CSV for reconciliation
+        seen_keys = set()  # (employee_id, child_id, date, start_time, end_time)
         
         for i, row in enumerate(reader, 1):
             try:
@@ -271,10 +274,12 @@ class ImportService:
                             # proceed to create below
                         else:
                             # Update done, no need to insert a new row
+                            seen_keys.add((employee_id, child_id, parsed['date'], parsed['start_time'], parsed['end_time']))
                             continue
                     else:
                         # Already imported, skip as duplicate
                         duplicates += 1
+                        seen_keys.add((employee_id, child_id, parsed['date'], parsed['start_time'], parsed['end_time']))
                         continue
                 
                 try:
@@ -306,9 +311,45 @@ class ImportService:
                     is_imported=True
                 )
                 imported += 1
+                seen_keys.add((employee_id, child_id, parsed['date'], parsed['start_time'], parsed['end_time']))
                 
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
+        
+        # Reconcile: any imported shift in the current payroll period that is NOT in this CSV becomes manual again
+        if reconcile_period:
+            try:
+                payroll = PayrollService(self.db)
+                period = payroll.get_current_period()
+                if period and seen_keys:
+                    start_date = period['start_date']
+                    end_date = period['end_date']
+                    # fetch existing imported shifts in current period
+                    existing_imported = self.db.fetchall(
+                        """
+                        SELECT id, employee_id, child_id, date, start_time, end_time
+                        FROM shifts
+                        WHERE is_imported = 1 AND date >= ? AND date <= ?
+                        """,
+                        (start_date, end_date)
+                    )
+                    to_demote = []
+                    for s in existing_imported:
+                        key = (s['employee_id'], s['child_id'], s['date'], s['start_time'], s['end_time'])
+                        if key not in seen_keys:
+                            to_demote.append(s['id'])
+                    if to_demote:
+                        # Demote in reasonably sized chunks
+                        for i in range(0, len(to_demote), 500):
+                            chunk = to_demote[i:i+500]
+                            placeholders = ','.join('?' for _ in chunk)
+                            self.db.execute(
+                                f"UPDATE shifts SET is_imported = 0 WHERE id IN ({placeholders})",
+                                chunk
+                            )
+            except Exception:
+                # Non-fatal; do not break import summary
+                pass
         
         # Update stored header schema baseline after processing
         try:

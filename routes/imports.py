@@ -25,7 +25,7 @@ def import_csv():
             return jsonify({'error': f'File too large. Maximum size: {max_size/1024/1024}MB'}), 400
         
         service = ImportService(current_app.db)
-        result = service.import_csv(file)
+        result = service.import_csv(file, reconcile_period=True)
         
         return jsonify({
             'message': 'CSV imported successfully',
@@ -92,7 +92,7 @@ def batch_import_csv():
                 continue
             
             try:
-                result = service.import_csv(file)
+                result = service.import_csv(file, reconcile_period=False)
                 total_imported += result['imported']
                 total_duplicates += result['duplicates']
                 
