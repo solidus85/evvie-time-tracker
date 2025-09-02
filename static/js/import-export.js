@@ -258,9 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch('/api/import/reset-headers', { method: 'POST' });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Failed to reset header baseline');
-                window.app && window.app.showToast(data.message || 'CSV header baseline reset');
+                if (typeof app !== 'undefined' && app.showToast) {
+                    app.showToast(data.message || 'CSV header baseline reset');
+                }
             } catch (e) {
-                window.app && window.app.showToast(e.message || 'Failed to reset header baseline', 'error');
+                if (typeof app !== 'undefined' && app.showToast) {
+                    app.showToast(e.message || 'Failed to reset header baseline', 'error');
+                }
             }
         });
     }
