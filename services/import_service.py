@@ -181,10 +181,27 @@ class ImportService:
                 
                 if existing:
                     if not existing['is_imported']:
-                        # Delete the manual shift - imported takes precedence
-                        self.shift_service.delete(existing['id'])
-                        replaced += 1
-                        # Continue to import the new shift
+                        # Convert the existing manual shift to imported and align details
+                        try:
+                            self.db.execute(
+                                """UPDATE shifts 
+                                       SET is_imported = 1,
+                                           status = COALESCE(?, status),
+                                           service_code = COALESCE(?, service_code),
+                                           start_time = ?,
+                                           end_time = ?
+                                     WHERE id = ?""",
+                                (parsed['status'], parsed['service_code'], parsed['start_time'], parsed['end_time'], existing['id'])
+                            )
+                            replaced += 1
+                        except Exception as e:
+                            # Fallback: delete and re-insert if update fails for any reason
+                            self.shift_service.delete(existing['id'])
+                            replaced += 1
+                            # proceed to create below
+                        else:
+                            # Update done, no need to insert a new row
+                            continue
                     else:
                         # Already imported, skip as duplicate
                         duplicates += 1
