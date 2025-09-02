@@ -159,6 +159,7 @@ App.prototype.importCSV = async function() {
                 <p><strong>File:</strong> ${files[0].name}</p>
                 <p><strong>Imported:</strong> ${result.imported}</p>
                 <p><strong>Replaced:</strong> ${result.replaced || 0}</p>
+                <p><strong>Demoted:</strong> ${result.demoted || 0}</p>
                 <p><strong>Duplicates:</strong> ${result.duplicates}</p>
                 ${result.errors && result.errors.length > 0 ? `
                     <h4>Errors:</h4>
@@ -174,9 +175,13 @@ App.prototype.importCSV = async function() {
                 ` : ''}
             `;
             
-            const message = result.replaced > 0 
-                ? `Imported ${result.imported} shifts and replaced ${result.replaced} manual entries`
-                : `Imported ${result.imported} shifts successfully`;
+            let message = `Imported ${result.imported} shifts successfully`;
+            if ((result.replaced || 0) > 0) {
+                message = `Imported ${result.imported} shifts and replaced ${result.replaced} manual entries`;
+            }
+            if ((result.demoted || 0) > 0) {
+                message += `; demoted ${result.demoted} shift(s)`;
+            }
             this.showToast(message);
 
             // Prominent toast if header schema changed
@@ -207,12 +212,13 @@ App.prototype.importCSV = async function() {
                 <p><strong>Files Processed:</strong> ${files.length}</p>
                 <p><strong>Total Imported:</strong> ${result.total_imported}</p>
                 <p><strong>Total Duplicates:</strong> ${result.total_duplicates}</p>
+                <p><strong>Total Demoted:</strong> ${result.total_demoted || 0}</p>
                 
                 <h4>File Summary:</h4>
                 <div class="import-messages">
                     ${result.file_results.map(f => `
                         <div class="import-message warning">
-                            <strong>${f.filename}</strong>: Imported ${f.imported}, Duplicates ${f.duplicates}
+                            <strong>${f.filename}</strong>: Imported ${f.imported}, Duplicates ${f.duplicates}${typeof f.demoted !== 'undefined' ? `, Demoted ${f.demoted}` : ''}
                         </div>
                     `).join('')}
                 </div>

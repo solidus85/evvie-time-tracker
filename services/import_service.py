@@ -179,6 +179,7 @@ class ImportService:
         warnings = []
         baseline_set = False
         normalized_fields = []
+        demoted_count = 0
 
         # Fail fast if header schema changed vs. previous
         try:
@@ -354,6 +355,7 @@ class ImportService:
                                 """,
                                 chunk
                             )
+                        demoted_count = len(to_demote)
             except Exception:
                 # Non-fatal; do not break import summary
                 pass
@@ -373,6 +375,7 @@ class ImportService:
             'imported': imported,
             'duplicates': duplicates,
             'replaced': replaced,
+            'demoted': demoted_count,
             'errors': errors,
             'warnings': warnings
         }

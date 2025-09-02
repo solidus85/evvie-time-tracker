@@ -32,6 +32,7 @@ def import_csv():
             'imported': result['imported'],
             'replaced': result.get('replaced', 0),
             'duplicates': result['duplicates'],
+            'demoted': result.get('demoted', 0),
             'errors': result['errors'],
             'warnings': result['warnings']
         })
@@ -73,6 +74,7 @@ def batch_import_csv():
         all_results = []
         total_imported = 0
         total_duplicates = 0
+        total_demoted = 0
         all_errors = []
         all_warnings = []
         
@@ -95,6 +97,7 @@ def batch_import_csv():
                 result = service.import_csv(file, reconcile_period=False)
                 total_imported += result['imported']
                 total_duplicates += result['duplicates']
+                total_demoted += result.get('demoted', 0)
                 
                 # Prefix errors and warnings with filename
                 for error in result['errors']:
@@ -105,7 +108,8 @@ def batch_import_csv():
                 all_results.append({
                     'filename': file.filename,
                     'imported': result['imported'],
-                    'duplicates': result['duplicates']
+                    'duplicates': result['duplicates'],
+                    'demoted': result.get('demoted', 0)
                 })
             except Exception as e:
                 all_errors.append(f"File {file.filename}: {str(e)}")
@@ -114,6 +118,7 @@ def batch_import_csv():
             'message': f'Processed {len(files)} file(s)',
             'total_imported': total_imported,
             'total_duplicates': total_duplicates,
+            'total_demoted': total_demoted,
             'file_results': all_results,
             'errors': all_errors,
             'warnings': all_warnings
