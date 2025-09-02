@@ -198,10 +198,14 @@
                         </div>
                         <div class="card-body">
                             <div class="import-form">
-                        <input type="file" id="csv-file" accept=".csv" multiple>
-                        <button id="validate-csv" class="btn-secondary">Validate Files</button>
-                        <button id="import-csv" class="btn-primary">Import Files</button>
-                        <button id="reset-csv-headers" class="btn-secondary" title="Reset saved CSV header baseline">Reset CSV Header Baseline</button>
+                        <div class="import-primary-row">
+                            <input type="file" id="csv-file" accept=".csv" multiple>
+                            <button id="import-csv" class="btn-primary">Import Files</button>
+                        </div>
+                        <div class="import-secondary-row">
+                            <button id="validate-csv" class="btn-secondary">Validate Files</button>
+                            <button id="reset-csv-headers" class="btn-secondary" title="Reset saved CSV header baseline">Reset CSV Header Baseline</button>
+                        </div>
                     </div>
                     <div id="import-loading" class="import-loading" style="display: none;">
                         <div class="spinner"></div>
