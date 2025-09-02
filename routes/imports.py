@@ -176,3 +176,12 @@ def batch_validate_csv():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/reset-headers', methods=['POST'])
+def reset_csv_headers():
+    try:
+        # Remove the stored CSV header schema baseline
+        current_app.db.execute("DELETE FROM app_config WHERE key = ?", ('import_csv_headers',))
+        return jsonify({'message': 'CSV header baseline has been reset'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

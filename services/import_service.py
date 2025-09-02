@@ -117,7 +117,7 @@ class ImportService:
             errors = []
             warnings = []
 
-            # Compare against previously seen header schema and warn on changes
+            # Compare against previously seen header schema and error on changes
             try:
                 prev_schema = self.config_service.get_setting('import_csv_headers')
                 if prev_schema:
@@ -131,10 +131,10 @@ class ImportService:
                             msg_parts.append(f"added: {', '.join(sorted(added))}")
                         if removed:
                             msg_parts.append(f"removed: {', '.join(sorted(removed))}")
-                        warnings.append(f"CSV header schema changed since last import (" + "; ".join(msg_parts) + ")")
+                        errors.append("CSV header schema changed since last import (" + "; ".join(msg_parts) + ")")
                 else:
-                    # No baseline recorded yet
-                    warnings.append("No prior CSV header schema recorded; treating this as baseline")
+                    # No baseline recorded yet – treat as baseline on first import
+                    pass
             except Exception:
                 # Non-fatal
                 pass
@@ -177,7 +177,7 @@ class ImportService:
         errors = []
         warnings = []
 
-        # Warn if header schema changed vs. previous
+        # Fail fast if header schema changed vs. previous
         try:
             if reader.fieldnames:
                 normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
@@ -193,9 +193,16 @@ class ImportService:
                             msg_parts.append(f"added: {', '.join(sorted(added))}")
                         if removed:
                             msg_parts.append(f"removed: {', '.join(sorted(removed))}")
-                        warnings.append(f"CSV header schema changed since last import (" + "; ".join(msg_parts) + ")")
+                        return {
+                            'imported': 0,
+                            'duplicates': 0,
+                            'replaced': 0,
+                            'errors': ["CSV header schema changed since last import (" + "; ".join(msg_parts) + ")"],
+                            'warnings': []
+                        }
                 else:
-                    warnings.append("No prior CSV header schema recorded; treating this as baseline")
+                    # No baseline recorded yet – allow and set after import
+                    pass
         except Exception:
             pass
         

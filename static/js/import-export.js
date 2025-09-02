@@ -249,6 +249,23 @@ App.prototype.importCSV = async function() {
     }
 };
 
+// Reset stored CSV header baseline
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('reset-csv-headers');
+    if (btn) {
+        btn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/import/reset-headers', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to reset header baseline');
+                window.app && window.app.showToast(data.message || 'CSV header baseline reset');
+            } catch (e) {
+                window.app && window.app.showToast(e.message || 'Failed to reset header baseline', 'error');
+            }
+        });
+    }
+});
+
 App.prototype.exportData = async function(format) {
     const startDate = document.getElementById('export-start').value;
     const endDate = document.getElementById('export-end').value;
