@@ -38,6 +38,7 @@
                 </nav>
             </div>
             <div id="dashboard-view" class="view active">
+                <div class="page-container">
                 <div class="period-controls">
                     <button id="prev-period" class="btn-secondary">&lt; Previous</button>
                     <h2 id="period-label">Loading...</h2>
@@ -52,6 +53,7 @@
                 <div id="period-summary" class="summary">
                 </div>
                 <div id="overlap-detection" class="overlap-section">
+                </div>
                 </div>
             </div>
 
@@ -227,7 +229,7 @@
                             <input type="date" id="export-end">
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 6px; margin-left: 12px;">
-                            <input type="checkbox" id="export-include-imported" checked>
+                            <input type="checkbox" id="export-include-imported">
                             Include imported shifts
                         </label>
                         <div class="export-buttons">
