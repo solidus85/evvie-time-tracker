@@ -18,7 +18,7 @@ class Config:
     DATABASE = 'evvie_time_tracker.db'
     DEBUG = True
     HOST = '127.0.0.1'
-    PORT = 5000
+    PORT = 8080
     
     TIMEZONE = 'America/Chicago'
     DATE_FORMAT = '%Y-%m-%d'
