@@ -183,6 +183,8 @@ App.prototype.importCSV = async function() {
             if (Array.isArray(result.warnings)) {
                 const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
                 if (headerWarn) this.showToast(headerWarn, 'warning');
+                const baselineWarn = result.warnings.find(w => w.startsWith('CSV header baseline set'));
+                if (baselineWarn) this.showToast(baselineWarn);
             }
         } else {
             // Multiple file import
@@ -235,6 +237,8 @@ App.prototype.importCSV = async function() {
             if (Array.isArray(result.warnings)) {
                 const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
                 if (headerWarn) this.showToast(headerWarn, 'warning');
+                const baselineWarn = result.warnings.find(w => w.startsWith('CSV header baseline set'));
+                if (baselineWarn) this.showToast(baselineWarn);
             }
         }
         

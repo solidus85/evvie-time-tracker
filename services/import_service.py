@@ -176,6 +176,8 @@ class ImportService:
         replaced = 0  # Track replaced manual shifts
         errors = []
         warnings = []
+        baseline_set = False
+        normalized_fields = []
 
         # Fail fast if header schema changed vs. previous
         try:
@@ -201,8 +203,8 @@ class ImportService:
                             'warnings': []
                         }
                 else:
-                    # No baseline recorded yet – allow and set after import
-                    pass
+                    # No baseline recorded yet – allow and set after import (and inform user)
+                    baseline_set = True
         except Exception:
             pass
         
@@ -311,8 +313,11 @@ class ImportService:
         # Update stored header schema baseline after processing
         try:
             if reader.fieldnames:
-                normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
+                if not normalized_fields:
+                    normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
                 self.config_service.set_setting('import_csv_headers', json.dumps(normalized_fields))
+                if baseline_set:
+                    warnings.append("CSV header baseline set to: " + ", ".join(normalized_fields))
         except Exception:
             pass
 
