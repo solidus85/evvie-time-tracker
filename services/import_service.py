@@ -41,13 +41,25 @@ class ImportService:
         date_str = row['date']
         date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
         
-        consumer_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['consumer'])
-        child_name = consumer_match.group(1) if consumer_match else row['consumer']
-        child_code = consumer_match.group(2) if consumer_match else None
+        # Extract child name and optional code from parentheses
+        consumer_match_generic = re.match(r"(.+?)\s*\((.+?)\)\s*$", row['consumer'])
+        if consumer_match_generic:
+            child_name = consumer_match_generic.group(1).strip()
+            code_candidate = consumer_match_generic.group(2).strip()
+            child_code = code_candidate if re.fullmatch(r"[A-Z0-9]+", code_candidate) else None
+        else:
+            child_name = row['consumer']
+            child_code = None
         
-        employee_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['employee'])
-        employee_name = employee_match.group(1) if employee_match else row['employee']
-        employee_code = employee_match.group(2) if employee_match else None
+        # Extract employee name; treat any parenthetical suffix as non-canonical display and drop it
+        employee_generic = re.match(r"(.+?)\s*\((.+?)\)\s*$", row['employee'])
+        if employee_generic:
+            employee_name = employee_generic.group(1).strip()
+            code_candidate = employee_generic.group(2).strip()
+            employee_code = code_candidate if re.fullmatch(r"[A-Z0-9]+", code_candidate) else None
+        else:
+            employee_name = row['employee']
+            employee_code = None
         
         start_match = re.match(r'Start:\s*(.+)', row['start time'])
         start_time_str = start_match.group(1) if start_match else row['start time']
