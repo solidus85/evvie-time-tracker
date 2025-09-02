@@ -35,13 +35,35 @@ def get_shift(shift_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def _validate_time_str(value):
+    try:
+        datetime.strptime(value, '%H:%M:%S')
+        return True
+    except Exception:
+        return False
+
 @bp.route('/', methods=['POST'])
 def create_shift():
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not data:
+            return jsonify({'error': 'Request body cannot be empty'}), 400
+
         required = ['employee_id', 'child_id', 'date', 'start_time', 'end_time']
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
+
+        # Validate time formats strictly
+        if not _validate_time_str(data['start_time']):
+            return jsonify({'error': "Invalid start_time format. Use 'HH:MM:SS'"}), 400
+        if not _validate_time_str(data['end_time']):
+            return jsonify({'error': "Invalid end_time format. Use 'HH:MM:SS'"}), 400
         
         # Convert IDs to integers (they come as strings from frontend)
         try:
@@ -147,7 +169,15 @@ def create_shift():
 @bp.route('/<int:shift_id>', methods=['PUT'])
 def update_shift(shift_id):
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         service = ShiftService(current_app.db)
         
         shift = service.get_by_id(shift_id)
@@ -157,6 +187,17 @@ def update_shift(shift_id):
         if shift['is_imported']:
             return jsonify({'error': 'Cannot edit imported shifts'}), 403
         
+        # Validate provided fields
+        if 'date' in data:
+            try:
+                datetime.strptime(data['date'], '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        if 'start_time' in data and not _validate_time_str(data['start_time']):
+            return jsonify({'error': "Invalid start_time format. Use 'HH:MM:SS'"}), 400
+        if 'end_time' in data and not _validate_time_str(data['end_time']):
+            return jsonify({'error': "Invalid end_time format. Use 'HH:MM:SS'"}), 400
+
         warnings = []
         if any(field in data for field in ['date', 'start_time', 'end_time']):
             warnings = service.validate_shift(
@@ -235,8 +276,8 @@ def get_overlaps():
                     shift1 = employee_shifts[i]
                     shift2 = employee_shifts[j]
                     
-                    # Check if shifts overlap
-                    if shift1['end_time'] > shift2['start_time']:
+                    # Overlap if NOT (end1 <= start2 OR start1 >= end2)
+                    if not (shift1['end_time'] <= shift2['start_time'] or shift1['start_time'] >= shift2['end_time']):
                         overlap = {
                             'date': date,
                             'overlap_type': 'employee',
@@ -277,8 +318,8 @@ def get_overlaps():
                     if shift1['employee_id'] == shift2['employee_id']:
                         continue
                     
-                    # Check if shifts overlap
-                    if shift1['end_time'] > shift2['start_time']:
+                    # Overlap if NOT (end1 <= start2 OR start1 >= end2)
+                    if not (shift1['end_time'] <= shift2['start_time'] or shift1['start_time'] >= shift2['end_time']):
                         overlap = {
                             'date': date,
                             'overlap_type': 'child',

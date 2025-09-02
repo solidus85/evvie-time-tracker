@@ -12,7 +12,7 @@ class ExportService:
     def __init__(self, db):
         self.db = db
     
-    def get_shifts_for_export(self, start_date, end_date, employee_id=None, child_id=None):
+    def get_shifts_for_export(self, start_date, end_date, employee_id=None, child_id=None, include_imported=True):
         query = """
             SELECT s.*, e.friendly_name as employee_name, e.system_name as employee_system_name,
                    c.name as child_name, c.code as child_code,
@@ -20,9 +20,12 @@ class ExportService:
             FROM shifts s
             JOIN employees e ON s.employee_id = e.id
             JOIN children c ON s.child_id = c.id
-            WHERE s.date >= ? AND s.date <= ? AND s.is_imported = 0
+            WHERE s.date >= ? AND s.date <= ?
         """
         params = [start_date, end_date]
+        
+        if not include_imported:
+            query += " AND s.is_imported = 0"
         
         if employee_id:
             query += " AND s.employee_id = ?"
@@ -35,8 +38,8 @@ class ExportService:
         query += " ORDER BY s.date, s.start_time"
         return self.db.fetchall(query, params)
     
-    def export_csv(self, start_date, end_date, employee_id=None, child_id=None):
-        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id)
+    def export_csv(self, start_date, end_date, employee_id=None, child_id=None, include_imported=True):
+        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id, include_imported)
         
         output = StringIO()
         writer = csv.writer(output)
@@ -61,8 +64,8 @@ class ExportService:
         
         return output.getvalue()
     
-    def export_json(self, start_date, end_date, employee_id=None, child_id=None):
-        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id)
+    def export_json(self, start_date, end_date, employee_id=None, child_id=None, include_imported=True):
+        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id, include_imported)
         
         data = {
             'export_date': datetime.now().isoformat(),
@@ -105,8 +108,8 @@ class ExportService:
         
         return data
     
-    def generate_pdf_report(self, start_date, end_date, employee_id=None, child_id=None):
-        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id)
+    def generate_pdf_report(self, start_date, end_date, employee_id=None, child_id=None, include_imported=True):
+        shifts = self.get_shifts_for_export(start_date, end_date, employee_id, child_id, include_imported)
         
         buffer = BytesIO()
         # Use normal margins for full-width text, tables will be left-positioned by their width

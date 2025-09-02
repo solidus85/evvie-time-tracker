@@ -33,6 +33,16 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 
+                CREATE TABLE IF NOT EXISTS employee_aliases (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    employee_id INTEGER NOT NULL,
+                    alias TEXT NOT NULL,
+                    slug TEXT NOT NULL UNIQUE,
+                    source TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (employee_id) REFERENCES employees(id)
+                );
+                
                 CREATE TABLE IF NOT EXISTS children (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -54,11 +64,11 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (employee_id) REFERENCES employees(id),
                     FOREIGN KEY (child_id) REFERENCES children(id),
-                    CHECK (date(start_time) = date(end_time))
+                    CHECK (end_time > start_time)
                 );
                 
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_shift_unique 
-                ON shifts(employee_id, child_id, date, start_time);
+                ON shifts(employee_id, child_id, date, start_time, end_time);
                 
                 CREATE INDEX IF NOT EXISTS idx_shift_employee_date 
                 ON shifts(employee_id, date);
@@ -197,6 +207,151 @@ class Database:
             # Migration: add hidden to employees if needed
             if 'hidden' not in emp_column_names:
                 cursor.execute('ALTER TABLE employees ADD COLUMN hidden BOOLEAN DEFAULT 0')
+
+            # Migration: add employee_aliases table if needed
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='employee_aliases'
+            """)
+            if not cursor.fetchone():
+                cursor.execute('''
+                    CREATE TABLE employee_aliases (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER NOT NULL,
+                        alias TEXT NOT NULL,
+                        slug TEXT NOT NULL UNIQUE,
+                        source TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (employee_id) REFERENCES employees(id)
+                    )
+                ''')
+
+            # Migration: fix invalid CHECK on shifts and ensure indexes/constraints
+            cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='shifts'")
+            row = cursor.fetchone()
+            shifts_sql = row[0] if row else ''
+
+            needs_rebuild = False
+            if 'CHECK (date(start_time) = date(end_time))' in shifts_sql:
+                needs_rebuild = True
+
+            # Rebuild shifts table if needed to remove invalid CHECK and add proper CHECK
+            if needs_rebuild:
+                cursor.execute('PRAGMA foreign_keys = OFF')
+                cursor.execute('''
+                    CREATE TABLE shifts_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER NOT NULL,
+                        child_id INTEGER NOT NULL,
+                        date DATE NOT NULL,
+                        start_time TIME NOT NULL,
+                        end_time TIME NOT NULL,
+                        service_code TEXT,
+                        status TEXT,
+                        is_imported BOOLEAN DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (employee_id) REFERENCES employees(id),
+                        FOREIGN KEY (child_id) REFERENCES children(id),
+                        CHECK (end_time > start_time)
+                    )
+                ''')
+                cursor.execute('''
+                    INSERT INTO shifts_new (id, employee_id, child_id, date, start_time, end_time, service_code, status, is_imported, created_at)
+                    SELECT id, employee_id, child_id, date, start_time, end_time, service_code, status, is_imported, created_at FROM shifts
+                ''')
+                cursor.execute('DROP TABLE shifts')
+                cursor.execute('ALTER TABLE shifts_new RENAME TO shifts')
+                cursor.execute('PRAGMA foreign_keys = ON')
+                # Recreate helpful indexes after table rebuild
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_shift_employee_date ON shifts(employee_id, date)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_shift_child_date ON shifts(child_id, date)')
+
+            # Ensure unique index includes end_time
+            cursor.execute("SELECT name, sql FROM sqlite_master WHERE type='index' AND name='idx_shift_unique'")
+            idx = cursor.fetchone()
+            if idx:
+                idx_sql = idx[1] or ''
+                if 'start_time, end_time' not in idx_sql:
+                    cursor.execute('DROP INDEX IF EXISTS idx_shift_unique')
+                    cursor.execute('CREATE UNIQUE INDEX idx_shift_unique ON shifts(employee_id, child_id, date, start_time, end_time)')
+            else:
+                cursor.execute('CREATE UNIQUE INDEX idx_shift_unique ON shifts(employee_id, child_id, date, start_time, end_time)')
+
+            # Create overlap-preventing triggers for manual shifts (is_imported = 0)
+            def ensure_trigger(name, sql):
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='trigger' AND name = ?", (name,))
+                if not cursor.fetchone():
+                    cursor.execute(sql)
+
+            ensure_trigger(
+                'trg_shifts_no_overlap_employee_insert',
+                '''
+                CREATE TRIGGER trg_shifts_no_overlap_employee_insert
+                BEFORE INSERT ON shifts
+                WHEN NEW.is_imported = 0 AND EXISTS (
+                    SELECT 1 FROM shifts s
+                    WHERE s.date = NEW.date
+                      AND s.employee_id = NEW.employee_id
+                      AND NOT (NEW.end_time <= s.start_time OR NEW.start_time >= s.end_time)
+                )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Conflicts with existing shift for employee');
+                END;
+                '''
+            )
+
+            ensure_trigger(
+                'trg_shifts_no_overlap_child_insert',
+                '''
+                CREATE TRIGGER trg_shifts_no_overlap_child_insert
+                BEFORE INSERT ON shifts
+                WHEN NEW.is_imported = 0 AND EXISTS (
+                    SELECT 1 FROM shifts s
+                    WHERE s.date = NEW.date
+                      AND s.child_id = NEW.child_id
+                      AND NOT (NEW.end_time <= s.start_time OR NEW.start_time >= s.end_time)
+                )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Conflicts with existing shift for child');
+                END;
+                '''
+            )
+
+            ensure_trigger(
+                'trg_shifts_no_overlap_employee_update',
+                '''
+                CREATE TRIGGER trg_shifts_no_overlap_employee_update
+                BEFORE UPDATE ON shifts
+                WHEN NEW.is_imported = 0 AND EXISTS (
+                    SELECT 1 FROM shifts s
+                    WHERE s.date = NEW.date
+                      AND s.employee_id = NEW.employee_id
+                      AND s.id != OLD.id
+                      AND NOT (NEW.end_time <= s.start_time OR NEW.start_time >= s.end_time)
+                )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Conflicts with existing shift for employee');
+                END;
+                '''
+            )
+
+            ensure_trigger(
+                'trg_shifts_no_overlap_child_update',
+                '''
+                CREATE TRIGGER trg_shifts_no_overlap_child_update
+                BEFORE UPDATE ON shifts
+                WHEN NEW.is_imported = 0 AND EXISTS (
+                    SELECT 1 FROM shifts s
+                    WHERE s.date = NEW.date
+                      AND s.child_id = NEW.child_id
+                      AND s.id != OLD.id
+                      AND NOT (NEW.end_time <= s.start_time OR NEW.start_time >= s.end_time)
+                )
+                BEGIN
+                    SELECT RAISE(ABORT, 'Conflicts with existing shift for child');
+                END;
+                '''
+            )
             
             # Migration: rename max_hours_per_period to max_hours_per_week if needed
             cursor.execute("PRAGMA table_info(hour_limits)")

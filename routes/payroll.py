@@ -303,52 +303,25 @@ def get_payroll_report(period_id):
 
 @bp.route('/export', methods=['GET'])
 def export_payroll():
-    """Export payroll data in various formats"""
+    """Export payroll data using the same policy as export routes"""
     try:
+        from services.export_service import ExportService
         format_type = request.args.get('format', 'json')
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        
+        include_imported = request.args.get('include_imported', 'true').lower() == 'true'
+
         if not start_date or not end_date:
             return jsonify({'error': 'start_date and end_date required'}), 400
-        
-        # Get shifts data
-        shifts = current_app.db.fetchall(
-            """SELECT s.*, e.friendly_name as employee_name, c.name as child_name
-               FROM shifts s
-               JOIN employees e ON s.employee_id = e.id
-               JOIN children c ON s.child_id = c.id
-               WHERE s.date >= ? AND s.date <= ?
-               ORDER BY e.friendly_name, s.date""",
-            (start_date, end_date)
-        )
-        
+
+        service = ExportService(current_app.db)
+
         if format_type == 'csv':
-            import csv
-            from io import StringIO
-            
-            output = StringIO()
-            writer = csv.writer(output)
-            writer.writerow(['Employee', 'Child', 'Date', 'Start Time', 'End Time', 'Hours'])
-            
-            for shift in shifts:
-                from datetime import datetime
-                start = datetime.strptime(f"{shift['date']} {shift['start_time']}", '%Y-%m-%d %H:%M:%S')
-                end = datetime.strptime(f"{shift['date']} {shift['end_time']}", '%Y-%m-%d %H:%M:%S')
-                hours = (end - start).total_seconds() / 3600
-                
-                writer.writerow([
-                    shift['employee_name'],
-                    shift['child_name'],
-                    shift['date'],
-                    shift['start_time'],
-                    shift['end_time'],
-                    f"{hours:.2f}"
-                ])
-            
-            return output.getvalue(), 200, {'Content-Type': 'text/csv'}
+            data = service.export_csv(start_date, end_date, include_imported=include_imported)
+            return data, 200, {'Content-Type': 'text/csv'}
         else:
-            return jsonify([dict(s) for s in shifts])
+            data = service.export_json(start_date, end_date, include_imported=include_imported)
+            return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

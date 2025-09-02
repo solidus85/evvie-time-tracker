@@ -92,9 +92,13 @@ class BudgetService:
         existing = self.get_budget_for_period(child_id, period_start, period_end)
         
         if existing:
-            return self.update_child_budget(
-                existing['id'], budget_amount, budget_hours, notes
-            )
+            # If an actual manual budget exists, update it. If the budget
+            # comes from a report (id is None), create a new manual record.
+            if existing.get('id'):
+                return self.update_child_budget(
+                    existing['id'], budget_amount, budget_hours, notes
+                )
+            # fall through to insert a new budget
         
         return self.db.insert(
             """INSERT INTO child_budgets 

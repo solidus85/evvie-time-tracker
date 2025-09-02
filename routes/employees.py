@@ -58,7 +58,15 @@ def create_employee():
 @bp.route('/<int:employee_id>', methods=['PUT'])
 def update_employee(employee_id):
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         service = EmployeeService(current_app.db)
         
         if service.update(employee_id, data):

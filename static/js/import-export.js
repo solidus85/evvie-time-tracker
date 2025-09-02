@@ -235,11 +235,12 @@ App.prototype.exportData = async function(format) {
     }
     
     try {
+        const includeImported = document.getElementById('export-include-imported')?.checked ?? true;
         if (format === 'json') {
             // JSON export - get data and create download
             const data = await this.api('/api/export/json', {
                 method: 'POST',
-                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+                body: JSON.stringify({ start_date: startDate, end_date: endDate, include_imported: includeImported })
             });
             
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -256,7 +257,7 @@ App.prototype.exportData = async function(format) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+                body: JSON.stringify({ start_date: startDate, end_date: endDate, include_imported: includeImported })
             });
             
             if (!response.ok) {

@@ -23,7 +23,15 @@ def get_child_budgets():
 @bp.route('/children', methods=['POST'])
 def create_child_budget():
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         required = ['child_id', 'period_start', 'period_end']
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
@@ -84,7 +92,15 @@ def get_child_budget(budget_id):
 @bp.route('/children/<int:budget_id>', methods=['PUT'])
 def update_child_budget(budget_id):
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         service = BudgetService(current_app.db)
         
         service.update_child_budget(
@@ -123,7 +139,15 @@ def get_employee_rates():
 @bp.route('/rates', methods=['POST'])
 def create_employee_rate():
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         required = ['employee_id', 'hourly_rate', 'effective_date']
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400
@@ -164,7 +188,15 @@ def get_current_employee_rate(employee_id):
 @bp.route('/rates/<int:rate_id>', methods=['PUT'])
 def update_employee_rate(rate_id):
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         service = BudgetService(current_app.db)
         
         service.update_employee_rate(
@@ -198,7 +230,15 @@ def get_allocations():
 @bp.route('/allocations', methods=['POST'])
 def create_allocation():
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         required = ['child_id', 'employee_id', 'period_id', 'allocated_hours']
         if not all(data.get(field) for field in required):
             return jsonify({'error': 'Missing required fields'}), 400

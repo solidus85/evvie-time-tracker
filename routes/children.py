@@ -26,7 +26,15 @@ def get_child(child_id):
 @bp.route('/', methods=['POST'])
 def create_child():
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not data:
+            return jsonify({'error': 'Request body cannot be empty'}), 400
         if not data.get('name') or not data.get('code'):
             return jsonify({'error': 'Missing required fields'}), 400
         
@@ -45,7 +53,15 @@ def create_child():
 @bp.route('/<int:child_id>', methods=['PUT'])
 def update_child(child_id):
     try:
-        data = request.json
+        # Enforce JSON Content-Type and parse
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        try:
+            data = request.get_json(force=False)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON in request body'}), 400
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Request body must be a JSON object'}), 400
         service = ChildService(current_app.db)
         
         if service.update(child_id, data):

@@ -201,17 +201,17 @@ class PayrollService:
         return True
     
     def get_exclusions_for_period(self, start_date, end_date):
+        # Standard interval overlap: (start <= period_end) AND (end >= period_start)
         return self.db.fetchall(
             """SELECT ep.*, e.friendly_name as employee_name, c.name as child_name
                FROM exclusion_periods ep
                LEFT JOIN employees e ON ep.employee_id = e.id
                LEFT JOIN children c ON ep.child_id = c.id
                WHERE ep.active = 1 
-               AND ((ep.start_date <= ? AND ep.end_date >= ?)
-                    OR (ep.start_date <= ? AND ep.end_date >= ?)
-                    OR (ep.start_date >= ? AND ep.end_date <= ?))
+                 AND ep.start_date <= ? 
+                 AND ep.end_date >= ?
                ORDER BY ep.start_date""",
-            (end_date, start_date, start_date, start_date, start_date, end_date)
+            (end_date, start_date)
         )
     
     def calculate_bulk_dates(self, start_date, end_date, days_of_week, weeks):

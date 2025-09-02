@@ -30,6 +30,7 @@ def import_csv():
         return jsonify({
             'message': 'CSV imported successfully',
             'imported': result['imported'],
+            'replaced': result.get('replaced', 0),
             'duplicates': result['duplicates'],
             'errors': result['errors'],
             'warnings': result['warnings']

@@ -142,24 +142,25 @@ class ShiftService:
         return relevant_exclusions
     
     def check_overlaps(self, employee_id, child_id, date, start_time, end_time, exclude_shift_id=None):
+        # Standard overlap: NOT (new_end <= existing_start OR new_start >= existing_end)
         query = """
             SELECT * FROM shifts
             WHERE date = ? AND (
-                (employee_id = ? AND ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?) OR (start_time >= ? AND end_time <= ?)))
+                (employee_id = ? AND NOT (? <= start_time OR ? >= end_time))
                 OR
-                (child_id = ? AND ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?) OR (start_time >= ? AND end_time <= ?)))
+                (child_id = ? AND NOT (? <= start_time OR ? >= end_time))
             )
         """
         params = [
             date,
-            employee_id, start_time, start_time, end_time, end_time, start_time, end_time,
-            child_id, start_time, start_time, end_time, end_time, start_time, end_time
+            employee_id, end_time, start_time,
+            child_id, end_time, start_time
         ]
-        
+
         if exclude_shift_id:
             query += " AND id != ?"
             params.append(exclude_shift_id)
-        
+
         overlaps = self.db.fetchall(query, params)
         
         result = {'employee': None, 'child': None}

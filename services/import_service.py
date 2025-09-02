@@ -13,24 +13,48 @@ class ImportService:
         self.child_service = ChildService(db)
         self.shift_service = ShiftService(db)
     
+    def _normalize_header(self, name):
+        if name is None:
+            return ''
+        s = name.strip().lower()
+        if s and s[0] == '\ufeff':
+            s = s.lstrip('\ufeff')
+        synonyms = {
+            'consumer name': 'consumer',
+            'client': 'consumer',
+            'client name': 'consumer',
+            'employee name': 'employee',
+            'staff': 'employee',
+            'start': 'start time',
+            'start_time': 'start time',
+            'end': 'end time',
+            'end_time': 'end time',
+            'service': 'service code'
+        }
+        return synonyms.get(s, s)
+
+    def _normalize_row(self, row):
+        return {self._normalize_header(k): v for k, v in row.items()}
+    
     def parse_csv_row(self, row):
-        date_str = row['Date']
+        # Expect normalized lowercase keys
+        date_str = row['date']
         date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
         
-        consumer_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['Consumer'])
-        child_name = consumer_match.group(1) if consumer_match else row['Consumer']
+        consumer_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['consumer'])
+        child_name = consumer_match.group(1) if consumer_match else row['consumer']
         child_code = consumer_match.group(2) if consumer_match else None
         
-        employee_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['Employee'])
-        employee_name = employee_match.group(1) if employee_match else row['Employee']
+        employee_match = re.match(r'(.+?)\s*\(([A-Z0-9]+)\)', row['employee'])
+        employee_name = employee_match.group(1) if employee_match else row['employee']
         employee_code = employee_match.group(2) if employee_match else None
         
-        start_match = re.match(r'Start:\s*(.+)', row['Start Time'])
-        start_time_str = start_match.group(1) if start_match else row['Start Time']
+        start_match = re.match(r'Start:\s*(.+)', row['start time'])
+        start_time_str = start_match.group(1) if start_match else row['start time']
         start_time = datetime.strptime(start_time_str, '%I:%M %p').strftime('%H:%M:%S')
         
-        end_match = re.match(r'End:\s*(.+)', row['End Time'])
-        end_time_str = end_match.group(1) if end_match else row['End Time']
+        end_match = re.match(r'End:\s*(.+)', row['end time'])
+        end_time_str = end_match.group(1) if end_match else row['end time']
         end_time = datetime.strptime(end_time_str, '%I:%M %p').strftime('%H:%M:%S')
         
         # Handle special case where 12:00 AM means end of day
@@ -45,8 +69,8 @@ class ImportService:
             'employee_code': employee_code,
             'start_time': start_time,
             'end_time': end_time,
-            'service_code': row.get('Service Code'),
-            'status': row.get('Status', 'imported')
+            'service_code': row.get('service code'),
+            'status': row.get('status', 'imported')
         }
     
     def validate_csv(self, file):
@@ -55,12 +79,20 @@ class ImportService:
             file.seek(0)
             
             reader = csv.DictReader(StringIO(content))
-            required_columns = ['Date', 'Consumer', 'Employee', 'Start Time', 'End Time']
-            
-            if not all(col in reader.fieldnames for col in required_columns):
+            if not reader.fieldnames:
                 return {
                     'valid': False,
-                    'errors': [f"Missing required columns. Required: {required_columns}"],
+                    'errors': ["CSV appears to have no header row"],
+                    'warnings': [],
+                    'rows': 0
+                }
+            normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
+            required_columns = ['date', 'consumer', 'employee', 'start time', 'end time']
+            missing = [c for c in required_columns if c not in normalized_fields]
+            if missing:
+                return {
+                    'valid': False,
+                    'errors': [f"Missing required columns: {', '.join(missing)}. Found: {', '.join(normalized_fields)}"],
                     'warnings': [],
                     'rows': 0
                 }
@@ -72,7 +104,7 @@ class ImportService:
             for i, row in enumerate(reader, 1):
                 row_count = i
                 try:
-                    parsed = self.parse_csv_row(row)
+                    parsed = self.parse_csv_row(self._normalize_row(row))
                     
                     if not parsed['child_code']:
                         warnings.append(f"Row {i}: No code found for child '{parsed['child_name']}'")
@@ -108,16 +140,24 @@ class ImportService:
         
         for i, row in enumerate(reader, 1):
             try:
-                parsed = self.parse_csv_row(row)
+                parsed = self.parse_csv_row(self._normalize_row(row))
                 
-                employee = self.employee_service.get_by_system_name(parsed['employee_name'])
+                # Resolve employee by system_name or alias (slug)
+                employee = self.employee_service.get_by_alias(parsed['employee_name'])
                 if not employee:
+                    # Create with canonical slug as system_name
+                    slug = self.employee_service._slugify(parsed['employee_name'])
                     employee_id = self.employee_service.create(
                         friendly_name=parsed['employee_name'],
-                        system_name=parsed['employee_name']
+                        system_name=slug
                     )
                 else:
                     employee_id = employee['id']
+                    # Ensure we remember this alias if it wasn't recorded
+                    try:
+                        self.employee_service.ensure_alias(employee_id, parsed['employee_name'], source='import')
+                    except Exception:
+                        pass
                 
                 child = self.child_service.get_by_code(parsed['child_code']) if parsed['child_code'] else None
                 if not child:
