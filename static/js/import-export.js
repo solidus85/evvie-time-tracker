@@ -34,7 +34,7 @@ App.prototype.validateCSV = async function() {
                 body: formData
             });
             const result = await response.json();
-            
+
             resultsDiv.innerHTML = `
                 <h3>Validation Results</h3>
                 <p><strong>File:</strong> ${files[0].name}</p>
@@ -53,6 +53,12 @@ App.prototype.validateCSV = async function() {
                     </div>
                 ` : ''}
             `;
+
+            // Prominent toast if header schema changed
+            if (Array.isArray(result.warnings)) {
+                const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
+                if (headerWarn) this.showToast(headerWarn, 'warning');
+            }
         } else {
             // Multiple file validation
             const formData = new FormData();
@@ -95,6 +101,12 @@ App.prototype.validateCSV = async function() {
                     </div>
                 ` : ''}
             `;
+
+            // Prominent toast if header schema changed
+            if (Array.isArray(result.warnings)) {
+                const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
+                if (headerWarn) this.showToast(headerWarn, 'warning');
+            }
         }
     } catch (error) {
         this.showToast('Validation failed', 'error');
@@ -166,6 +178,12 @@ App.prototype.importCSV = async function() {
                 ? `Imported ${result.imported} shifts and replaced ${result.replaced} manual entries`
                 : `Imported ${result.imported} shifts successfully`;
             this.showToast(message);
+
+            // Prominent toast if header schema changed
+            if (Array.isArray(result.warnings)) {
+                const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
+                if (headerWarn) this.showToast(headerWarn, 'warning');
+            }
         } else {
             // Multiple file import
             const formData = new FormData();
@@ -212,6 +230,12 @@ App.prototype.importCSV = async function() {
             `;
             
             this.showToast(`Imported ${result.total_imported} shifts from ${files.length} files`);
+
+            // Prominent toast if header schema changed
+            if (Array.isArray(result.warnings)) {
+                const headerWarn = result.warnings.find(w => w.startsWith('CSV header schema changed'));
+                if (headerWarn) this.showToast(headerWarn, 'warning');
+            }
         }
         
         this.loadInitialData();
