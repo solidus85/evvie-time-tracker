@@ -21,6 +21,8 @@ class ImportService:
             s = s.lstrip('\ufeff')
         synonyms = {
             'consumer name': 'consumer',
+            'child': 'consumer',
+            'child name': 'consumer',
             'client': 'consumer',
             'client name': 'consumer',
             'employee name': 'employee',
