@@ -324,12 +324,13 @@ class ImportService:
                 if period and seen_keys:
                     start_date = period['start_date']
                     end_date = period['end_date']
-                    # fetch existing imported shifts in current period
+                    # fetch imported or mis-labeled shifts in current period
                     existing_imported = self.db.fetchall(
                         """
                         SELECT id, employee_id, child_id, date, start_time, end_time
                         FROM shifts
-                        WHERE is_imported = 1 AND date >= ? AND date <= ?
+                        WHERE (is_imported = 1 OR LOWER(COALESCE(status,'')) = 'imported')
+                          AND date >= ? AND date <= ?
                         """,
                         (start_date, end_date)
                     )
@@ -343,8 +344,14 @@ class ImportService:
                         for i in range(0, len(to_demote), 500):
                             chunk = to_demote[i:i+500]
                             placeholders = ','.join('?' for _ in chunk)
+                            # Demote and normalize status from 'imported' to 'reconciled'
                             self.db.execute(
-                                f"UPDATE shifts SET is_imported = 0 WHERE id IN ({placeholders})",
+                                f"""
+                                UPDATE shifts 
+                                   SET is_imported = 0,
+                                       status = CASE WHEN LOWER(COALESCE(status, '')) = 'imported' THEN 'reconciled' ELSE status END
+                                 WHERE id IN ({placeholders})
+                                """,
                                 chunk
                             )
             except Exception:

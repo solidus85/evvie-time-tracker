@@ -254,6 +254,9 @@ class ShiftService:
         return result['total_hours'] or 0
     
     def create(self, employee_id, child_id, date, start_time, end_time, service_code=None, status='new', is_imported=False):
+        # Prevent manual shifts from having 'imported' status
+        if not is_imported and status and str(status).lower() == 'imported':
+            status = 'new'
         return self.db.insert(
             """INSERT INTO shifts (employee_id, child_id, date, start_time, end_time, service_code, status, is_imported)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -270,6 +273,9 @@ class ShiftService:
         
         for field in ['employee_id', 'child_id', 'date', 'start_time', 'end_time', 'service_code', 'status']:
             if field in data:
+                # Prevent manual shifts from having 'imported' status on update
+                if field == 'status' and not shift['is_imported'] and str(data[field]).lower() == 'imported':
+                    data[field] = 'new'
                 updates.append(f"{field} = ?")
                 params.append(data[field])
         
