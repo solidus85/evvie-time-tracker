@@ -1,10 +1,12 @@
 import csv
 import re
+import json
 from datetime import datetime
 from io import StringIO
 from services.employee_service import EmployeeService
 from services.child_service import ChildService
 from services.shift_service import ShiftService
+from services.config_service import ConfigService
 
 class ImportService:
     def __init__(self, db):
@@ -12,6 +14,7 @@ class ImportService:
         self.employee_service = EmployeeService(db)
         self.child_service = ChildService(db)
         self.shift_service = ShiftService(db)
+        self.config_service = ConfigService(db)
     
     def _normalize_header(self, name):
         if name is None:
@@ -110,9 +113,31 @@ class ImportService:
                     'warnings': [],
                     'rows': 0
                 }
-            
+
             errors = []
             warnings = []
+
+            # Compare against previously seen header schema and warn on changes
+            try:
+                prev_schema = self.config_service.get_setting('import_csv_headers')
+                if prev_schema:
+                    prev = json.loads(prev_schema)
+                    prev_set, cur_set = set(prev), set(normalized_fields)
+                    added = cur_set - prev_set
+                    removed = prev_set - cur_set
+                    if added or removed:
+                        msg_parts = []
+                        if added:
+                            msg_parts.append(f"added: {', '.join(sorted(added))}")
+                        if removed:
+                            msg_parts.append(f"removed: {', '.join(sorted(removed))}")
+                        warnings.append(f"CSV header schema changed since last import (" + "; ".join(msg_parts) + ")")
+                else:
+                    # No baseline recorded yet
+                    warnings.append("No prior CSV header schema recorded; treating this as baseline")
+            except Exception:
+                # Non-fatal
+                pass
             row_count = 0
             
             for i, row in enumerate(reader, 1):
@@ -151,6 +176,28 @@ class ImportService:
         replaced = 0  # Track replaced manual shifts
         errors = []
         warnings = []
+
+        # Warn if header schema changed vs. previous
+        try:
+            if reader.fieldnames:
+                normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
+                prev_schema = self.config_service.get_setting('import_csv_headers')
+                if prev_schema:
+                    prev = json.loads(prev_schema)
+                    prev_set, cur_set = set(prev), set(normalized_fields)
+                    added = cur_set - prev_set
+                    removed = prev_set - cur_set
+                    if added or removed:
+                        msg_parts = []
+                        if added:
+                            msg_parts.append(f"added: {', '.join(sorted(added))}")
+                        if removed:
+                            msg_parts.append(f"removed: {', '.join(sorted(removed))}")
+                        warnings.append(f"CSV header schema changed since last import (" + "; ".join(msg_parts) + ")")
+                else:
+                    warnings.append("No prior CSV header schema recorded; treating this as baseline")
+        except Exception:
+            pass
         
         for i, row in enumerate(reader, 1):
             try:
@@ -254,6 +301,14 @@ class ImportService:
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
         
+        # Update stored header schema baseline after processing
+        try:
+            if reader.fieldnames:
+                normalized_fields = [self._normalize_header(h) for h in reader.fieldnames]
+                self.config_service.set_setting('import_csv_headers', json.dumps(normalized_fields))
+        except Exception:
+            pass
+
         return {
             'imported': imported,
             'duplicates': duplicates,
