@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """
-PNG ➜ ICO converter with optional white-to-transparent processing.
+PNG ➜ ICO converter with optional background-to-transparent processing.
 
-Usage:
-  python scripts/png_to_ico.py static/favicon.png static/favicon.ico \
-         --sizes 16,32,48,64,128 --white-to-transparent
+Usage examples:
+  # Basic multi-size ICO
+  python scripts/png_to_ico.py static/favicon.png static/favicon.ico --sizes 16,32,48,64,128
+
+  # Make the top-left pixel color transparent (recommended)
+  python scripts/png_to_ico.py static/favicon.png static/favicon.ico --transparent-from-topleft --tolerance 8
+
+  # Legacy: make near-white pixels transparent
+  python scripts/png_to_ico.py static/favicon.png static/favicon.ico --white-to-transparent --threshold 250
 
 Requires: Pillow (PIL)
   pip install Pillow
@@ -46,6 +52,33 @@ def make_white_transparent(img: Image.Image, threshold: int = 250) -> Image.Imag
     return img
 
 
+def make_color_transparent(img: Image.Image, color: tuple, tolerance: int = 0) -> Image.Image:
+    """Convert pixels matching the given color to transparent.
+    - color: (R, G, B[, A]) tuple. Alpha in color is ignored for matching.
+    - tolerance: max absolute per-channel diff to still consider a match.
+    """
+    if img.mode != 'RGBA':
+        img = img.convert('RGBA')
+    # Normalize color to RGB
+    if len(color) == 4:
+        cr, cg, cb, _ = color
+    else:
+        cr, cg, cb = color[:3]
+    datas = img.getdata()
+    new_data = []
+    for r, g, b, a in datas:
+        if (
+            abs(r - cr) <= tolerance and
+            abs(g - cg) <= tolerance and
+            abs(b - cb) <= tolerance
+        ):
+            new_data.append((r, g, b, 0))
+        else:
+            new_data.append((r, g, b, a))
+    img.putdata(new_data)
+    return img
+
+
 def fit_to_square(img: Image.Image, bg=(0, 0, 0, 0)) -> Image.Image:
     """Pad the image with transparent pixels to make it square, preserving content."""
     w, h = img.size
@@ -66,15 +99,23 @@ def main():
                         help='Comma-separated icon sizes (pixels). Default: 16,32,48,64,128')
     parser.add_argument('--white-to-transparent', action='store_true',
                         help='Convert near-white background to transparent (threshold 250)')
+    parser.add_argument('--transparent-from-topleft', action='store_true',
+                        help='Use top-left pixel color as background and make it transparent')
     parser.add_argument('--threshold', type=int, default=250,
                         help='Threshold for white-to-transparent (0-255). Default: 250')
+    parser.add_argument('--tolerance', type=int, default=0,
+                        help='Color tolerance for transparent-from-topleft (0-255). Default: 0')
 
     args = parser.parse_args()
 
     img = Image.open(args.input)
     img = img.convert('RGBA')
     img = fit_to_square(img)
-    if args.white_to_transparent:
+    if args.transparent_from_topleft:
+        # Determine background color from top-left pixel
+        bg_color = img.getpixel((0, 0))
+        img = make_color_transparent(img, bg_color, tolerance=args.tolerance)
+    elif args.white_to_transparent:
         img = make_white_transparent(img, threshold=args.threshold)
 
     # Generate resized versions
@@ -91,4 +132,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
