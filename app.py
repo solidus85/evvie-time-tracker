@@ -42,8 +42,8 @@ def create_app():
     
     @app.route('/favicon.ico')
     def favicon():
-        # Serve favicon from static directory
-        return app.send_static_file('favicon.ico')
+        # Serve PNG favicon for broad compatibility
+        return app.send_static_file('favicon.png')
     
     @app.errorhandler(404)
     def not_found(error):
